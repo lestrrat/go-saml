@@ -8,7 +8,7 @@ import (
 )
 
 func (av AttributeValue) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	start.Name = xml.Name{Local: "saml:AttributeValue"}
+	start.Name = ns.SAML.XMLName("AttributeValue")
 	start.Attr = append(
 		start.Attr,
 		xml.Attr{
@@ -23,7 +23,7 @@ func (av AttributeValue) MarshalXML(e *xml.Encoder, start xml.StartElement) erro
 }
 
 func (a Attribute) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	start.Name = xml.Name{Local: "saml:Attribute"}
+	start.Name = ns.SAML.XMLName("Attribute")
 	if a.Name == "" {
 		return errors.New("missing .Name")
 	}
@@ -55,7 +55,7 @@ func (a Attribute) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 }
 
 func (as AuthnStatement) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	start.Name = xml.Name{Local: "saml:AuthnStatement"}
+	start.Name = ns.SAML.XMLName("AuthnStatement")
 	start.Attr = append(
 		start.Attr,
 		xml.Attr{
@@ -74,7 +74,7 @@ func (as AuthnStatement) MarshalXML(e *xml.Encoder, start xml.StartElement) erro
 }
 
 func (c Conditions) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	start.Name = xml.Name{Local: "saml:Conditions"}
+	start.Name = ns.SAML.XMLName("Conditions")
 	start.Attr = append(
 		start.Attr,
 		xml.Attr{
@@ -96,21 +96,21 @@ func (sc SubjectConfirmation) MarshalXML(e *xml.Encoder, start xml.StartElement)
 	if sc.Method == "" {
 		sc.Method = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 	}
-	start.Name = xml.Name{Local: "saml:SubjectConfirmation"}
+	start.Name = ns.SAML.XMLName("SubjectConfirmation")
 	start.Attr = append(start.Attr, xml.Attr{
 		Name:  xml.Name{Local: "Method"},
 		Value: sc.Method,
 	})
 	e.EncodeToken(start)
 	e.EncodeToken(xml.StartElement{
-		Name: xml.Name{Local: "saml:SubjectConfirmationData"},
+		Name: ns.SAML.XMLName("SubjectConfirmationData"),
 		Attr: []xml.Attr{
 			xml.Attr{Name: xml.Name{Local: "InResponseTo"}, Value: sc.InResponseTo},
 			xml.Attr{Name: xml.Name{Local: "Recipient"}, Value: sc.Recipient},
 			xml.Attr{Name: xml.Name{Local: "NotOnOrAfter"}, Value: sc.NotOnOrAfter.Format(TimeFormat)},
 		},
 	})
-	e.EncodeToken(xml.EndElement{Name: xml.Name{Local: "saml:SubjectConfirmationData"}})
+	e.EncodeToken(xml.EndElement{Name: ns.SAML.XMLName("SubjectConfirmationData")})
 	e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
 }
@@ -127,29 +127,29 @@ func (n NameID) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 }
 
 func (s Subject) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	start.Name = xml.Name{Local: "saml:Subject"}
+	start.Name = ns.SAML.XMLName("Subject")
 	e.EncodeToken(start)
-	e.EncodeElement(s.NameID, xml.StartElement{Name: xml.Name{Local: "saml:NameID"}})
-	e.EncodeElement(s.SubjectConfirmation, xml.StartElement{Name: xml.Name{Local: "saml:SubjectConfirmation"}})
+	e.EncodeElement(s.NameID, xml.StartElement{Name: ns.SAML.XMLName("NameID")})
+	e.EncodeElement(s.SubjectConfirmation, xml.StartElement{Name: ns.SAML.XMLName("SubjectConfirmation")})
 	e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
 }
 
 func (s Signature) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Name = xml.Name{Local: "ds:Signature"}
-	start.Attr = append(start.Attr, ns.XMLDSignature)
+	start.Attr = append(start.Attr, ns.XMLDSignature.XMLAttr())
 	e.EncodeToken(start)
 	e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
 }
 
 func (a Assertion) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	start.Name = xml.Name{Local: "saml:Assertion"}
+	start.Name = ns.SAML.XMLName("Assertion")
 	start.Attr = append(
 		start.Attr,
-		ns.SAML,
-		ns.XMLSchema,
-		ns.XMLSchemaInstance,
+		ns.SAML.XMLAttr(),
+		ns.XMLSchema.XMLAttr(),
+		ns.XMLSchemaInstance.XMLAttr(),
 		xml.Attr{
 			Name:  xml.Name{Local: "ID"},
 			Value: a.ID,
@@ -164,12 +164,12 @@ func (a Assertion) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 		},
 	)
 	e.EncodeToken(start)
-	e.EncodeElement(a.Issuer, xml.StartElement{Name: xml.Name{Local: "saml:Issuer"}})
-	e.EncodeElement(a.Signature, xml.StartElement{Name: xml.Name{Local: "ds:Signature"}})
-	e.EncodeElement(a.Subject, xml.StartElement{Name: xml.Name{Local: "saml:Subject"}})
-	e.EncodeElement(a.Conditions, xml.StartElement{Name: xml.Name{Local: "saml:Conditions"}})
-	e.EncodeElement(a.AuthnStatement, xml.StartElement{Name: xml.Name{Local: "saml:AuthnStatement"}})
-	e.EncodeElement(a.AttributeStatement, xml.StartElement{Name: xml.Name{Local: "saml:AttributeStatement"}})
+	e.EncodeElement(a.Issuer, xml.StartElement{Name: ns.SAML.XMLName("Issuer")})
+	e.EncodeElement(a.Signature, xml.StartElement{Name: ns.SAML.XMLName("Signature")})
+	e.EncodeElement(a.Subject, xml.StartElement{Name: ns.SAML.XMLName("Subject")})
+	e.EncodeElement(a.Conditions, xml.StartElement{Name: ns.SAML.XMLName("Conditions")})
+	e.EncodeElement(a.AuthnStatement, xml.StartElement{Name: ns.SAML.XMLName("AuthnStatement")})
+	e.EncodeElement(a.AttributeStatement, xml.StartElement{Name: ns.SAML.XMLName("AttributeStatement")})
 	e.EncodeToken(xml.EndElement{Name: start.Name})
 
 	return nil
