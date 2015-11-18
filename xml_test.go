@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lestrrat/go-saml/ns"
 	"github.com/stretchr/testify/assert"
 )
 
