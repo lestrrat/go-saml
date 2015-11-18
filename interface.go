@@ -5,27 +5,7 @@ import (
 	"time"
 )
 
-var TimeFormat = "2006-01-02T15:04:05"
-var XMLSchemaNamespace = xml.Attr{
-	Name:  xml.Name{Local: "xmlns:xs"},
-	Value: "http://www.w3.org/2001/XMLSchema",
-}
-var XMLSchemaInstanceNamespace = xml.Attr{
-	Name:  xml.Name{Local: "xmlns:xsi"},
-	Value: "http://www.w3.org/2001/XMLSchema-instance",
-}
-var SAMLNamespace = xml.Attr{
-	Name:  xml.Name{Local: "xmlns:saml"},
-	Value: "urn:oasis:names:tc:SAML:2.0:assertion",
-}
-var XMLDSignatureNamespace = xml.Attr{
-	Name:  xml.Name{Local: "xmlns:ds"},
-	Value: "http://www.w3.org/2000/09/xmldsig#",
-}
-var X500Namespace = xml.Attr{
-	Name:  xml.Name{Local: "xmlns:x500"},
-	Value: "urn:oasis:names:tc:SAML:2.0:profiles:attribute:X500",
-}
+const TimeFormat = "2006-01-02T15:04:05"
 
 type AttributeValue struct {
 	Type  string

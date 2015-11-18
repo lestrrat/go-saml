@@ -3,6 +3,8 @@ package saml
 import (
 	"encoding/xml"
 	"errors"
+
+	"github.com/lestrrat/go-saml/ns"
 )
 
 func (av AttributeValue) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
@@ -135,7 +137,7 @@ func (s Subject) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 
 func (s Signature) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Name = xml.Name{Local: "ds:Signature"}
-	start.Attr = append(start.Attr, XMLDSignatureNamespace)
+	start.Attr = append(start.Attr, ns.XMLDSignature)
 	e.EncodeToken(start)
 	e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
@@ -145,9 +147,9 @@ func (a Assertion) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Name = xml.Name{Local: "saml:Assertion"}
 	start.Attr = append(
 		start.Attr,
-		SAMLNamespace,
-		XMLSchemaNamespace,
-		XMLSchemaInstanceNamespace,
+		ns.SAML,
+		ns.XMLSchema,
+		ns.XMLSchemaInstance,
 		xml.Attr{
 			Name:  xml.Name{Local: "ID"},
 			Value: a.ID,

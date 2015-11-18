@@ -39,7 +39,7 @@ func TestAssertion_XML(t *testing.T) {
 			Attributes: []Attribute{
 				Attribute{
 					Attrs: []xml.Attr{
-						X500Namespace,
+						ns.X500,
 						xml.Attr{
 							Name:  xml.Name{Local: "x500:Encoding"},
 							Value: "LDAP",
