@@ -10,14 +10,12 @@ import (
 )
 
 func TestAssertion_XML(t *testing.T) {
-	s := Assertion{
+	a := Assertion{
 		Conditions: Conditions{
 			NotBefore:    time.Now(),
 			NotOnOrAfter: time.Now(),
-			AudienceRestriction: AudienceRestriction{
-				Audience: "https://sp.example.com/SAML2",
-			},
 		},
+		Version:      "2.0",
 		ID:           "b07b804c-7c29-ea16-7300-4f3d6f7928ac",
 		IssueInstant: time.Now(),
 		Issuer:       "https://idp.example.org/SAML2",
@@ -36,38 +34,38 @@ func TestAssertion_XML(t *testing.T) {
 				AuthnContextClassRef: "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
 			},
 		},
-		AttributeStatement: AttributeStatement{
-			Attributes: []Attribute{
-				Attribute{
-					Attrs: []xml.Attr{
-						ns.X500.XMLAttr(),
-						xml.Attr{
-							Name:  xml.Name{Local: "x500:Encoding"},
-							Value: "LDAP",
-						},
-						xml.Attr{
-							Name:  xml.Name{Local: "NameFormat"},
-							Value: "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-						},
-					},
-					Name:         "urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
-					FriendlyName: "eduPersonAffiliation",
-					Values: []AttributeValue{
-						AttributeValue{
-							Type:  "xs:string",
-							Value: "member",
-						},
-						AttributeValue{
-							Type:  "xs:string",
-							Value: "staff",
-						},
-					},
-				},
+	}
+	a.Conditions.AddAudienceRestriction(
+		AudienceRestriction{
+			Audience: []string{"https://sp.example.com/SAML2"},
+		},
+	)
+	a.AddAttribute(Attribute{
+		Attrs: []xml.Attr{
+			ns.X500.XMLAttr(),
+			xml.Attr{
+				Name:  xml.Name{Local: "x500:Encoding"},
+				Value: "LDAP",
+			},
+			xml.Attr{
+				Name:  xml.Name{Local: "NameFormat"},
+				Value: "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
 			},
 		},
-		Version: "2.0",
-	}
-	xmlbuf, err := xml.MarshalIndent(s, "", "  ")
+		Name:         "urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
+		FriendlyName: "eduPersonAffiliation",
+		Values: []AttributeValue{
+			AttributeValue{
+				Type:  "xs:string",
+				Value: "member",
+			},
+			AttributeValue{
+				Type:  "xs:string",
+				Value: "staff",
+			},
+		},
+	})
+	xmlbuf, err := xml.MarshalIndent(a, "", "  ")
 	if !assert.NoError(t, err, "marshal indent succeeds") {
 		return
 	}

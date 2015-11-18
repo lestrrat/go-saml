@@ -32,12 +32,14 @@ type AuthnStatement struct {
 	AuthnContext AuthnContext
 }
 type AudienceRestriction struct {
-	Audience string
+	Audience []string
 }
+
 type Conditions struct {
 	NotBefore           time.Time `xml:",attr"`
 	NotOnOrAfter        time.Time `xml:",attr"`
-	AudienceRestriction AudienceRestriction
+	AudienceRestriction []AudienceRestriction
+	Condition           []interface{}
 }
 
 type Signature string

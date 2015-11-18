@@ -73,6 +73,18 @@ func (as AuthnStatement) MarshalXML(e *xml.Encoder, start xml.StartElement) erro
 	return nil
 }
 
+func (ar AudienceRestriction) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	start.Name = ns.SAML.XMLName("AudienceRestriction")
+	e.EncodeToken(start)
+	for _, a := range ar.Audience {
+		e.EncodeToken(xml.StartElement{Name: ns.SAML.XMLName("Audience")})
+		e.EncodeToken(xml.CharData(a))
+		e.EncodeToken(xml.EndElement{Name: ns.SAML.XMLName("Audience")})
+	}
+	e.EncodeToken(xml.EndElement{Name: start.Name})
+	return nil
+}
+
 func (c Conditions) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Name = ns.SAML.XMLName("Conditions")
 	start.Attr = append(
@@ -87,7 +99,9 @@ func (c Conditions) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 		},
 	)
 	e.EncodeToken(start)
-	e.Encode(c.AudienceRestriction)
+	for _, ar := range c.AudienceRestriction {
+		e.Encode(ar)
+	}
 	e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
 }
