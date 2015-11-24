@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/ns"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,10 +66,35 @@ func TestAssertion_XML(t *testing.T) {
 			},
 		},
 	})
-	xmlbuf, err := xml.MarshalIndent(a, "", "  ")
-	if !assert.NoError(t, err, "marshal indent succeeds") {
+
+	xmlstr, err := a.Serialize()
+	if !assert.NoError(t, err, "Serialize() succeeds") {
 		return
 	}
 
-	t.Logf("%s", xmlbuf)
+	t.Logf("%s", xmlstr)
+}
+
+func TestAuthnRequest(t *testing.T) {
+	ar := NewAuthnRequest()
+	ar.ID = "809707f0030a5d00620c9d9df97f627afe9dcc24"
+	ar.Version = "2.0"
+	ar.IssueInstant = time.Now()
+	ar.Issuer = "http://sp.example.com/metadata"
+	ar.Destination = "http://idp.example.com/sso"
+	ar.ProviderName = "FooProvider"
+	ar.ProtocolBinding = binding.HTTPPost
+	ar.AssertionConsumerServiceURL = "http://sp.example.com/acs"
+	ar.NameIDPolicy = NewNameIDPolicy(NameIDFormatEmailAddress, true)
+	ar.RequestedAuthnContext = NewRequestedAuthnContext(
+		"exact",
+		"urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+	)
+
+	xmlstr, err := ar.Serialize()
+	if !assert.NoError(t, err, "Serialize() succeeds") {
+		return
+	}
+
+	t.Logf("%s", xmlstr)
 }

@@ -9,3 +9,25 @@ func (a *Assertion) AddAttribute(att Attribute) error {
 	a.AttributeStatement.Attributes = append(a.AttributeStatement.Attributes, att)
 	return nil
 }
+
+func NewNameIDPolicy(f string, allowCreate bool) *NameIDPolicy {
+	return &NameIDPolicy {
+		Format: f,
+		AllowCreate: allowCreate,
+	}
+}
+
+func NewRequestedAuthnContext(cmp, classRef string) *RequestedAuthnContext {
+	return &RequestedAuthnContext{
+		Comparison: cmp,
+		AuthnContextClassRef: classRef,
+	}
+}
+
+func NewAuthnRequest() *AuthnRequest {
+	return &AuthnRequest{
+		Request: Request{},
+	}
+}
+
+
