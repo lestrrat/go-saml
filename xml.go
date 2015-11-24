@@ -7,32 +7,6 @@ import (
 	"github.com/lestrrat/go-libxml2"
 )
 
-type Freer interface {
-	Free()
-}
-
-func makeFreeFunc(e Freer) *nodegc {
-	return &nodegc{
-		rollbackFunc: e.Free,
-	}
-}
-
-type nodegc struct {
-	rollbackFunc func()
-	canceled     bool
-}
-
-func (r *nodegc) Cancel() {
-	r.canceled = true
-}
-
-func (r *nodegc) Run() {
-	if r.canceled {
-		return
-	}
-	r.rollbackFunc()
-}
-
 const SAMLNS = `urn:oasis:names:tc:SAML:2.0:assertion`
 
 type MakeXMLNoder interface {
@@ -91,8 +65,8 @@ func (s Subject) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(sub)
-	defer free.Run()
+	sub.MakeMortal()
+	defer sub.AutoFree()
 
 	for _, noder := range []MakeXMLNoder{s.NameID, s.SubjectConfirmation} {
 		n, err := noder.MakeXMLNode(d)
@@ -102,7 +76,7 @@ func (s Subject) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		sub.AppendChild(n)
 	}
 
-	free.Cancel()
+	sub.MakePersistent()
 	return sub, nil
 }
 
@@ -121,8 +95,8 @@ func (sc SubjectConfirmation) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(scxml)
-	defer free.Run()
+	scxml.MakeMortal()
+	defer scxml.AutoFree()
 
 	method := sc.Method
 	if sc.Method == "" {
@@ -140,7 +114,7 @@ func (sc SubjectConfirmation) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 	scd.SetAttribute("NotOnOrAfter", sc.NotOnOrAfter.Format(TimeFormat))
 
 	scxml.AppendChild(scd)
-	free.Cancel()
+	scxml.MakePersistent()
 	return scxml, nil
 }
 
@@ -149,8 +123,8 @@ func (c Conditions) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(cxml)
-	defer free.Run()
+	cxml.MakeMortal()
+	defer cxml.AutoFree()
 
 	cxml.SetAttribute("NotBefore", c.NotBefore.Format(TimeFormat))
 	cxml.SetAttribute("NotOnOrAfter", c.NotOnOrAfter.Format(TimeFormat))
@@ -163,7 +137,7 @@ func (c Conditions) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		cxml.AppendChild(arxml)
 	}
 
-	free.Cancel()
+	cxml.MakePersistent()
 	return cxml, err
 }
 
@@ -172,8 +146,8 @@ func (ar AudienceRestriction) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(axml)
-	defer free.Run()
+	axml.MakeMortal()
+	defer axml.AutoFree()
 
 	for _, a := range ar.Audience {
 		audxml, err := d.CreateElement("saml:Audience")
@@ -183,7 +157,7 @@ func (ar AudienceRestriction) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 		axml.AppendChild(audxml)
 		audxml.AppendText(string(a))
 	}
-	free.Cancel()
+	axml.MakePersistent()
 	return axml, nil
 }
 
@@ -192,8 +166,8 @@ func (as AuthnStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) 
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(asxml)
-	defer free.Run()
+	asxml.MakeMortal()
+	defer asxml.AutoFree()
 
 	asxml.SetAttribute("AuthnInstant", as.AuthnInstant.Format(TimeFormat))
 	asxml.SetAttribute("SessionIndex", as.SessionIndex)
@@ -202,7 +176,7 @@ func (as AuthnStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) 
 		return nil, err
 	}
 	asxml.AppendChild(acxml)
-	free.Cancel()
+	asxml.MakePersistent()
 	return asxml, nil
 }
 
@@ -211,8 +185,8 @@ func (ac AuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(acxml)
-	defer free.Run()
+	acxml.MakeMortal()
+	defer acxml.AutoFree()
 
 	accxml, err := d.CreateElement("saml:AuthnClassRef")
 	if err != nil {
@@ -221,7 +195,7 @@ func (ac AuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	acxml.AppendChild(accxml)
 	accxml.AppendText(ac.AuthnContextClassRef)
 
-	free.Cancel()
+	acxml.MakePersistent()
 	return acxml, nil
 }
 
@@ -241,8 +215,8 @@ func (as AttributeStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, err
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(asxml)
-	defer free.Run()
+	asxml.MakeMortal()
+	defer asxml.AutoFree()
 
 	for _, attr := range as.Attributes {
 		attrxml, err := attr.MakeXMLNode(d)
@@ -252,7 +226,7 @@ func (as AttributeStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, err
 		asxml.AppendChild(attrxml)
 	}
 
-	free.Cancel()
+	asxml.MakePersistent()
 	return asxml, nil
 }
 
@@ -261,12 +235,12 @@ func (av AttributeValue) MakeNodeXML(d *libxml2.Document) (libxml2.Node, error) 
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(avxml)
-	defer free.Run()
+	avxml.MakeMortal()
+	defer avxml.AutoFree()
 
 	avxml.SetAttribute("xsi:type", av.Type)
 	avxml.AppendText(av.Value)
-	free.Cancel()
+	avxml.MakePersistent()
 	return avxml, nil
 }
 
@@ -275,8 +249,8 @@ func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(axml)
-	defer free.Run()
+	axml.MakeMortal()
+	defer axml.AutoFree()
 
 	axml.SetAttribute("Name", a.Name)
 	for _, attr := range a.Attrs {
@@ -301,7 +275,7 @@ func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		}
 		axml.AppendChild(vxml)
 	}
-	free.Cancel()
+	axml.MakePersistent()
 	return axml, nil
 }
 
@@ -310,11 +284,11 @@ func (s Signature) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(sigxml)
-	defer free.Run()
+	sigxml.MakeMortal()
+	defer sigxml.AutoFree()
 
 	// XXX Later
-	free.Cancel()
+	sigxml.MakePersistent()
 	return sigxml, nil
 }
 
@@ -323,8 +297,8 @@ func (rac RequestedAuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node,
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(racxml)
-	defer free.Run()
+	racxml.MakeMortal()
+	defer racxml.AutoFree()
 
 	racxml.SetAttribute("Comparison", rac.Comparison)
 
@@ -335,7 +309,7 @@ func (rac RequestedAuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node,
 	racxml.AppendChild(accxml)
 	accxml.AppendText(rac.AuthnContextClassRef)
 
-	free.Cancel()
+	racxml.MakePersistent()
 	return racxml, nil
 }
 
@@ -344,8 +318,8 @@ func (nip NameIDPolicy) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(nipxml)
-	defer free.Run()
+	nipxml.MakeMortal()
+	defer nipxml.AutoFree()
 
 	nipxml.SetAttribute("AllowCreate", strconv.FormatBool(nip.AllowCreate))
 
@@ -355,7 +329,7 @@ func (nip NameIDPolicy) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if v := nip.SPNameQualifier; v != "" {
 		nipxml.SetAttribute("SPNameQualifier", v)
 	}
-	free.Cancel()
+	nipxml.MakePersistent()
 	return nipxml, nil
 }
 
@@ -368,8 +342,8 @@ func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	free := makeFreeFunc(arxml)
-	defer free.Run()
+	arxml.MakeMortal()
+	defer arxml.AutoFree()
 
 	arxml.SetNamespace("saml", SAMLNS)
 	arxml.SetNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol", false)
@@ -404,6 +378,6 @@ func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		}
 		arxml.AppendChild(racxml)
 	}
-	free.Cancel()
+	arxml.MakePersistent()
 	return arxml, nil
 }
