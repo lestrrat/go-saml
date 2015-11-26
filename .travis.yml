@@ -6,4 +6,5 @@ sudo: false
 addons:
   apt:
     packages:
+      - libxmlsec1-dev
       - libxml2-dev
