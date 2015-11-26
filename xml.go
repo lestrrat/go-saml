@@ -23,7 +23,7 @@ func serialize(n MakeXMLNoder) (string, error) {
 	// note: no need to gc the root separately, as it's done by
 	// d.Free()
 	d.SetDocumentElement(root)
-	return d.Dump(true), nil
+	return libxml2.C14NSerialize{}.Serialize(d)
 }
 
 func (a Assertion) Serialize() (string, error) {
@@ -36,8 +36,8 @@ func (a Assertion) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		return nil, err
 	}
 
-	axml.SetNamespace("xs", "http://www.w3.org/2001/XMLSchema", false)
-	axml.SetNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance", false)
+	axml.SetNamespace("http://www.w3.org/2001/XMLSchema", "xs", false)
+	axml.SetNamespace("http://www.w3.org/2001/XMLSchema-instance", "xsi", false)
 	axml.SetAttribute("ID", a.ID)
 	axml.SetAttribute("Version", a.Version)
 	axml.SetAttribute("IssueInstant", a.IssueInstant.Format(TimeFormat))
@@ -47,14 +47,14 @@ func (a Assertion) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		return nil, err
 	}
 	iss.AppendText(a.Issuer)
-	axml.AppendChild(iss)
+	axml.AddChild(iss)
 
 	for _, noder := range []MakeXMLNoder{a.Signature, a.Subject, a.Conditions, a.AuthnStatement, a.AttributeStatement} {
 		n, err := noder.MakeXMLNode(d)
 		if err != nil {
 			return nil, nil
 		}
-		axml.AppendChild(n)
+		axml.AddChild(n)
 	}
 
 	return axml, nil
@@ -73,7 +73,7 @@ func (s Subject) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		sub.AppendChild(n)
+		sub.AddChild(n)
 	}
 
 	sub.MakePersistent()
@@ -113,7 +113,7 @@ func (sc SubjectConfirmation) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 	scd.SetAttribute("Recipient", sc.Recipient)
 	scd.SetAttribute("NotOnOrAfter", sc.NotOnOrAfter.Format(TimeFormat))
 
-	scxml.AppendChild(scd)
+	scxml.AddChild(scd)
 	scxml.MakePersistent()
 	return scxml, nil
 }
@@ -134,7 +134,7 @@ func (c Conditions) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		cxml.AppendChild(arxml)
+		cxml.AddChild(arxml)
 	}
 
 	cxml.MakePersistent()
@@ -154,7 +154,7 @@ func (ar AudienceRestriction) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 		if err != nil {
 			return nil, err
 		}
-		axml.AppendChild(audxml)
+		axml.AddChild(audxml)
 		audxml.AppendText(string(a))
 	}
 	axml.MakePersistent()
@@ -175,7 +175,7 @@ func (as AuthnStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) 
 	if err != nil {
 		return nil, err
 	}
-	asxml.AppendChild(acxml)
+	asxml.AddChild(acxml)
 	asxml.MakePersistent()
 	return asxml, nil
 }
@@ -192,7 +192,7 @@ func (ac AuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	acxml.AppendChild(accxml)
+	acxml.AddChild(accxml)
 	accxml.AppendText(ac.AuthnContextClassRef)
 
 	acxml.MakePersistent()
@@ -223,7 +223,7 @@ func (as AttributeStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, err
 		if err != nil {
 			return nil, err
 		}
-		asxml.AppendChild(attrxml)
+		asxml.AddChild(attrxml)
 	}
 
 	asxml.MakePersistent()
@@ -273,7 +273,7 @@ func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		axml.AppendChild(vxml)
+		axml.AddChild(vxml)
 	}
 	axml.MakePersistent()
 	return axml, nil
@@ -306,7 +306,7 @@ func (rac RequestedAuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node,
 	if err != nil {
 		return nil, err
 	}
-	racxml.AppendChild(accxml)
+	racxml.AddChild(accxml)
 	accxml.AppendText(rac.AuthnContextClassRef)
 
 	racxml.MakePersistent()
@@ -338,15 +338,14 @@ func (ar AuthnRequest) Serialize() (string, error) {
 }
 
 func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	arxml, err := d.CreateElement("saml:AuthnRequest")
+	arxml, err := d.CreateElementNS(SAMLNS, "saml:AuthnRequest")
 	if err != nil {
 		return nil, err
 	}
 	arxml.MakeMortal()
 	defer arxml.AutoFree()
 
-	arxml.SetNamespace("saml", SAMLNS)
-	arxml.SetNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol", false)
+	arxml.SetNamespace("urn:oasis:names:tc:SAML:2.0:protocol",  "samlp", false)
 	arxml.SetAttribute("ID", ar.ID)
 	arxml.SetAttribute("ProviderName", ar.ProviderName)
 	arxml.SetAttribute("Version", ar.Version)
@@ -361,14 +360,14 @@ func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		return nil, err
 	}
 	iss.AppendText(ar.Issuer)
-	arxml.AppendChild(iss)
+	arxml.AddChild(iss)
 
 	if nip := ar.NameIDPolicy; nip != nil {
 		nipxml, err := nip.MakeXMLNode(d)
 		if err != nil {
 			return nil, err
 		}
-		arxml.AppendChild(nipxml)
+		arxml.AddChild(nipxml)
 	}
 
 	if rac := ar.RequestedAuthnContext; rac != nil {
@@ -376,7 +375,7 @@ func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		arxml.AppendChild(racxml)
+		arxml.AddChild(racxml)
 	}
 	arxml.MakePersistent()
 	return arxml, nil

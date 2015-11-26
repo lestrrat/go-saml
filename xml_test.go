@@ -1,10 +1,13 @@
 package saml
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/xml"
 	"testing"
 	"time"
 
+	"github.com/lestrrat/go-libxml2"
 	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/ns"
 	"github.com/stretchr/testify/assert"
@@ -96,5 +99,24 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	t.Logf("%s", xmlstr)
+	p := libxml2.NewParser(libxml2.XmlParseDTDLoad | libxml2.XmlParseDTDAttr | libxml2.XmlParseNoEnt)
+	c14ndoc, err := p.ParseString(xmlstr)
+	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
+		return
+	}
+	defer c14ndoc.Free()
+
+	root, err := c14ndoc.DocumentElement()
+	if !assert.NoError(t, err, "DocumentElement succeeds") {
+		return
+	}
+
+	privkey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if !assert.NoError(t, err, "GenerateKey succeeds") {
+		return
+	}
+
+	InjectSignature(root, privkey)
+
+	t.Logf("%s", c14ndoc.Dump(true))
 }
