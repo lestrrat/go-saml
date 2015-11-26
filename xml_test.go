@@ -116,7 +116,11 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	InjectSignature(root, privkey)
+	s, err := NewGenericSign(RSA_SHA1, EnvelopedSignature, SHA1, C14N1_0)
+	if !assert.NoError(t, err, "NewGenericSign succeeds") {
+		return
+	}
+	s.Sign(root, privkey)
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
