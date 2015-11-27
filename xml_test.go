@@ -94,8 +94,6 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 	s.Sign(root, privkey, "")
-
-	t.Logf("%s", c14ndoc.Dump(true))
 }
 
 func TestAuthnRequest(t *testing.T) {

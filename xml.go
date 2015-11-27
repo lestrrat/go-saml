@@ -243,18 +243,32 @@ func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	defer axml.AutoFree()
 
 	axml.SetAttribute("Name", a.Name)
+
+	// Process xmlns first
 	for k, v := range a.Attrs {
+		if !strings.HasPrefix(k, "xmlns") {
+			continue
+		}
+
+		prefix := ""
 		if i := strings.IndexByte(k, ':'); i > 0 {
-			if k[:i] == "xmlns" {
-				if err := axml.SetNamespace(v, k[i+1:], false); err != nil {
-					return nil, err
-				}
-			} else {
-				if _, err := axml.LookupNamespaceURI(k[:i]); err != nil {
-					return nil, err
-				}
-				axml.SetAttribute(k, v)
+			prefix = k[i+1:]
+		}
+		if err := axml.SetNamespace(v, prefix, false); err != nil {
+			return nil, err
+		}
+	}
+
+	for k, v := range a.Attrs {
+		if strings.HasPrefix(k, "xmlns") {
+			continue
+		}
+
+		if i := strings.IndexByte(k, ':'); i > 0 {
+			if _, err := axml.LookupNamespaceURI(k[:i]); err != nil {
+				return nil, err
 			}
+			axml.SetAttribute(k, v)
 		}
 	}
 
