@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	"github.com/lestrrat/go-libxml2"
+	"github.com/lestrrat/go-saml/ns"
 )
-
-const SAMLNS = `urn:oasis:names:tc:SAML:2.0:assertion`
 
 type MakeXMLNoder interface {
 	MakeXMLNode(*libxml2.Document) (libxml2.Node, error)
@@ -33,18 +32,18 @@ func (a Assertion) Serialize() (string, error) {
 }
 
 func (a Assertion) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	axml, err := d.CreateElementNS(SAMLNS, "saml:Assertion")
+	axml, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("Assertion"))
 	if err != nil {
 		return nil, err
 	}
 
-	axml.SetNamespace("http://www.w3.org/2001/XMLSchema", "xs", false)
-	axml.SetNamespace("http://www.w3.org/2001/XMLSchema-instance", "xsi", false)
+	axml.SetNamespace(ns.XMLSchema.URI, ns.XMLSchema.Prefix, false)
+	axml.SetNamespace(ns.XMLSchemaInstance.URI, ns.XMLSchemaInstance.Prefix, false)
 	axml.SetAttribute("ID", a.ID)
 	axml.SetAttribute("Version", a.Version)
 	axml.SetAttribute("IssueInstant", a.IssueInstant.Format(TimeFormat))
 
-	iss, err := d.CreateElementNS(SAMLNS, "saml:Issuer")
+	iss, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("Issuer"))
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +62,7 @@ func (a Assertion) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 }
 
 func (s Subject) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	sub, err := d.CreateElement("saml:Subject")
+	sub, err := d.CreateElement(ns.SAML.AddPrefix("Subject"))
 	if err != nil {
 		return nil, err
 	}
@@ -83,17 +82,17 @@ func (s Subject) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 }
 
 func (n NameID) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	nameid, err := d.CreateElement("saml:NameID")
+	nameid, err := d.CreateElement(ns.SAML.AddPrefix("NameID"))
 	if err != nil {
 		return nil, err
 	}
-	nameid.SetAttribute("Format", "urn:oasis:names:tc:SAML:2.0:nameid-format:transient")
-	nameid.AppendText(string(n))
+	nameid.SetAttribute("Format", n.Format.String())
+	nameid.AppendText(n.Value)
 	return nameid, nil
 }
 
 func (sc SubjectConfirmation) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	scxml, err := d.CreateElement("saml:SubjectConfirmation")
+	scxml, err := d.CreateElement(ns.SAML.AddPrefix("SubjectConfirmation"))
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +101,12 @@ func (sc SubjectConfirmation) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 
 	method := sc.Method
 	if sc.Method == "" {
-		method = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
+		method = Bearer
 	}
 
 	scxml.SetAttribute("Method", method)
 
-	scd, err := d.CreateElement("saml:SubjectConfirmationData")
+	scd, err := d.CreateElement(ns.SAML.AddPrefix("SubjectConfirmationData"))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +120,7 @@ func (sc SubjectConfirmation) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 }
 
 func (c Conditions) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	cxml, err := d.CreateElement("saml:Conditions")
+	cxml, err := d.CreateElement(ns.SAML.AddPrefix("Conditions"))
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +143,7 @@ func (c Conditions) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 }
 
 func (ar AudienceRestriction) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	axml, err := d.CreateElement("saml:AudienceRestriction")
+	axml, err := d.CreateElement(ns.SAML.AddPrefix("AudienceRestriction"))
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +151,7 @@ func (ar AudienceRestriction) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 	defer axml.AutoFree()
 
 	for _, a := range ar.Audience {
-		audxml, err := d.CreateElement("saml:Audience")
+		audxml, err := d.CreateElement(ns.SAML.AddPrefix("Audience"))
 		if err != nil {
 			return nil, err
 		}
@@ -164,7 +163,7 @@ func (ar AudienceRestriction) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 }
 
 func (as AuthnStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	asxml, err := d.CreateElement("saml:AuthnStatement")
+	asxml, err := d.CreateElement(ns.SAML.AddPrefix("AuthnStatement"))
 	if err != nil {
 		return nil, err
 	}
@@ -183,26 +182,26 @@ func (as AuthnStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) 
 }
 
 func (ac AuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	acxml, err := d.CreateElement("saml:AuthnContext")
+	acxml, err := d.CreateElement(ns.SAML.AddPrefix("AuthnContext"))
 	if err != nil {
 		return nil, err
 	}
 	acxml.MakeMortal()
 	defer acxml.AutoFree()
 
-	accxml, err := d.CreateElement("saml:AuthnClassRef")
+	accxml, err := d.CreateElement(ns.SAML.AddPrefix("AuthnClassRef"))
 	if err != nil {
 		return nil, err
 	}
 	acxml.AddChild(accxml)
-	accxml.AppendText(ac.AuthnContextClassRef)
+	accxml.AppendText(ac.AuthnContextClassRef.String())
 
 	acxml.MakePersistent()
 	return acxml, nil
 }
 
 func (as AttributeStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	asxml, err := d.CreateElement("saml:AttributeStatement")
+	asxml, err := d.CreateElement(ns.SAML.AddPrefix("AttributeStatement"))
 	if err != nil {
 		return nil, err
 	}
@@ -222,21 +221,21 @@ func (as AttributeStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, err
 }
 
 func (av AttributeValue) MakeNodeXML(d *libxml2.Document) (libxml2.Node, error) {
-	avxml, err := d.CreateElement("saml:AttributeValue")
+	avxml, err := d.CreateElement(ns.SAML.AddPrefix("AttributeValue"))
 	if err != nil {
 		return nil, err
 	}
 	avxml.MakeMortal()
 	defer avxml.AutoFree()
 
-	avxml.SetAttribute("xsi:type", av.Type)
+	avxml.SetAttribute(ns.XMLSchemaInstance.AddPrefix("type"), av.Type)
 	avxml.AppendText(av.Value)
 	avxml.MakePersistent()
 	return avxml, nil
 }
 
 func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	axml, err := d.CreateElement("saml:Attribute")
+	axml, err := d.CreateElement(ns.SAML.AddPrefix("Attribute"))
 	if err != nil {
 		return nil, err
 	}
@@ -254,9 +253,8 @@ func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 				if _, err := axml.LookupNamespaceURI(k[:i]); err != nil {
 					return nil, err
 				}
+				axml.SetAttribute(k, v)
 			}
-
-			axml.SetAttribute(k, v)
 		}
 	}
 
@@ -289,7 +287,7 @@ func (s Signature) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 }
 
 func (rac RequestedAuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	racxml, err := d.CreateElement("saml:RequestedAuthnContext")
+	racxml, err := d.CreateElement(ns.SAML.AddPrefix("RequestedAuthnContext"))
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +296,7 @@ func (rac RequestedAuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node,
 
 	racxml.SetAttribute("Comparison", rac.Comparison)
 
-	accxml, err := d.CreateElement("saml:AuthnContextClassRef")
+	accxml, err := d.CreateElement(ns.SAML.AddPrefix("AuthnContextClassRef"))
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +308,7 @@ func (rac RequestedAuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node,
 }
 
 func (nip NameIDPolicy) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	nipxml, err := d.CreateElement("saml:NameIDPolicy")
+	nipxml, err := d.CreateElement(ns.SAML.AddPrefix("NameIDPolicy"))
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +318,7 @@ func (nip NameIDPolicy) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	nipxml.SetAttribute("AllowCreate", strconv.FormatBool(nip.AllowCreate))
 
 	if v := nip.Format; v != "" {
-		nipxml.SetAttribute("Format", v)
+		nipxml.SetAttribute("Format", v.String())
 	}
 	if v := nip.SPNameQualifier; v != "" {
 		nipxml.SetAttribute("SPNameQualifier", v)
@@ -334,14 +332,14 @@ func (ar AuthnRequest) Serialize() (string, error) {
 }
 
 func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	arxml, err := d.CreateElementNS(SAMLNS, "saml:AuthnRequest")
+	arxml, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("AuthnRequest"))
 	if err != nil {
 		return nil, err
 	}
 	arxml.MakeMortal()
 	defer arxml.AutoFree()
 
-	arxml.SetNamespace("urn:oasis:names:tc:SAML:2.0:protocol", "samlp", false)
+	arxml.SetNamespace(ns.SAMLP.URI, ns.SAMLP.Prefix, false)
 	arxml.SetAttribute("ID", ar.ID)
 	arxml.SetAttribute("ProviderName", ar.ProviderName)
 	arxml.SetAttribute("Version", ar.Version)
@@ -351,7 +349,7 @@ func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	arxml.SetAttribute("AssertionConsumerServiceURL", ar.AssertionConsumerServiceURL)
 
 	// XXX Comeback later.
-	iss, err := d.CreateElementNS(SAMLNS, "saml:Issuer")
+	iss, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("Issuer"))
 	if err != nil {
 		return nil, err
 	}

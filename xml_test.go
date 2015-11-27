@@ -23,7 +23,10 @@ func TestAssertion_XML(t *testing.T) {
 		IssueInstant: time.Now(),
 		Issuer:       "https://idp.example.org/SAML2",
 		Subject: Subject{
-			NameID: "3f7b3dcf-1674-4ecd-92c8-1544f346baf8",
+			NameID: NameID{
+				Format: NameIDFormatTransient,
+				Value: "3f7b3dcf-1674-4ecd-92c8-1544f346baf8",
+			},
 			SubjectConfirmation: SubjectConfirmation{
 				InResponseTo: "aaf23196-1773-2113-474a-fe114412ab72",
 				Recipient:    "https://sp.example.com/SAML2/SSO/POST",
@@ -34,7 +37,7 @@ func TestAssertion_XML(t *testing.T) {
 			AuthnInstant: time.Now(),
 			SessionIndex: "b07b804c-7c29-ea16-7300-4f3d6f7928ac",
 			AuthnContext: AuthnContext{
-				AuthnContextClassRef: "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+				AuthnContextClassRef: PasswordProtectedTransport,
 			},
 		},
 	}
@@ -68,7 +71,30 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 
-	t.Logf("%s", xmlstr)
+	p := libxml2.NewParser(libxml2.XmlParseDTDLoad | libxml2.XmlParseDTDAttr | libxml2.XmlParseNoEnt)
+	c14ndoc, err := p.ParseString(xmlstr)
+	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
+		return
+	}
+	defer c14ndoc.Free()
+
+	root, err := c14ndoc.DocumentElement()
+	if !assert.NoError(t, err, "DocumentElement succeeds") {
+		return
+	}
+
+	privkey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if !assert.NoError(t, err, "GenerateKey succeeds") {
+		return
+	}
+
+	s, err := NewGenericSign(RSA_SHA1, EnvelopedSignature, SHA1, C14N1_0)
+	if !assert.NoError(t, err, "NewGenericSign succeeds") {
+		return
+	}
+	s.Sign(root, privkey)
+
+	t.Logf("%s", c14ndoc.Dump(true))
 }
 
 func TestAuthnRequest(t *testing.T) {

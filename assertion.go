@@ -1,5 +1,13 @@
 package saml
 
+func (am AuthenticationMethod) String() string {
+	return string(am)
+}
+
+func (n NameIDFormat) String() string {
+	return string(n)
+}
+
 func (c *Conditions) AddAudienceRestriction(ar AudienceRestriction) error {
 	c.AudienceRestriction = append(c.AudienceRestriction, ar)
 	return nil
@@ -10,7 +18,7 @@ func (a *Assertion) AddAttribute(att Attribute) error {
 	return nil
 }
 
-func NewNameIDPolicy(f string, allowCreate bool) *NameIDPolicy {
+func NewNameIDPolicy(f NameIDFormat, allowCreate bool) *NameIDPolicy {
 	return &NameIDPolicy {
 		Format: f,
 		AllowCreate: allowCreate,

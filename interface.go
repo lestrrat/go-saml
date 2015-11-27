@@ -10,10 +10,17 @@ import (
 // TimeFormat is the format defined in xs:dateTime
 const TimeFormat = "2006-01-02T15:04:05"
 
+type AuthenticationMethod string
+type ConfirmationMethod string
+type NameIDFormat string
+
 const (
-	NameIDFormatEmailAddress    = `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress`
-	NameIDFormatUnspecified     = `urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified`
-	NameIDFormatX509SubjectName = `urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName`
+	Bearer                      ConfirmationMethod   = `urn:oasis:names:tc:SAML:2.0:cm:bearer`
+	NameIDFormatEmailAddress    NameIDFormat         = `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress`
+	NameIDFormatTransient       NameIDFormat         = `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`
+	NameIDFormatUnspecified     NameIDFormat         = `urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified`
+	NameIDFormatX509SubjectName NameIDFormat         = `urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName`
+	PasswordProtectedTransport  AuthenticationMethod = `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`
 )
 
 var (
@@ -83,7 +90,7 @@ type AttributeStatement struct {
 }
 
 type AuthnContext struct {
-	AuthnContextClassRef string
+	AuthnContextClassRef AuthenticationMethod
 }
 
 type AuthnStatement struct {
@@ -98,7 +105,7 @@ type AudienceRestriction struct {
 
 type NameIDPolicy struct {
 	AllowCreate     bool
-	Format          string
+	Format          NameIDFormat
 	SPNameQualifier string
 }
 
@@ -147,7 +154,11 @@ type Conditions struct {
 
 // TODO: This is a way more complex type
 type Signature string
-type NameID string
+type NameID struct {
+	Format NameIDFormat
+	Value  string
+}
+
 type SubjectConfirmation struct {
 	Method       string
 	InResponseTo string    `xml:"InResponseTo"`
