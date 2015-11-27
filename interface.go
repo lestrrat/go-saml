@@ -1,7 +1,6 @@
 package saml
 
 import (
-	"encoding/xml"
 	"errors"
 	"time"
 
@@ -73,7 +72,7 @@ type AttributeValue struct {
 }
 
 type Attribute struct {
-	Attrs        []xml.Attr
+	Attrs        map[string]string
 	FriendlyName string
 	Name         string
 	Values       []AttributeValue
@@ -168,6 +167,5 @@ type Assertion struct {
 	Issuer             string    `xml:"Issuer"`
 	Signature          Signature
 	Subject            Subject
-	Version            string   `xml:",attr"`
-	XMLName            xml.Name `xml:"saml:Assertion"`
+	Version            string `xml:",attr"`
 }

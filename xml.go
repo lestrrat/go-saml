@@ -1,8 +1,8 @@
 package saml
 
 import (
-	"encoding/xml"
 	"strconv"
+	"strings"
 
 	"github.com/lestrrat/go-libxml2"
 )
@@ -22,7 +22,9 @@ func serialize(n MakeXMLNoder) (string, error) {
 	}
 	// note: no need to gc the root separately, as it's done by
 	// d.Free()
-	d.SetDocumentElement(root)
+	if err := d.SetDocumentElement(root); err != nil {
+		return "", err
+	}
 	return libxml2.C14NSerialize{}.Serialize(d)
 }
 
@@ -52,7 +54,7 @@ func (a Assertion) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	for _, noder := range []MakeXMLNoder{a.Signature, a.Subject, a.Conditions, a.AuthnStatement, a.AttributeStatement} {
 		n, err := noder.MakeXMLNode(d)
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
 		axml.AddChild(n)
 	}
@@ -199,17 +201,6 @@ func (ac AuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	return acxml, nil
 }
 
-func attr(name, value string) xml.Attr {
-	return attrFull(xml.Name{Local: name}, value)
-}
-
-func attrFull(name xml.Name, value string) xml.Attr {
-	return xml.Attr{
-		Name:  name,
-		Value: value,
-	}
-}
-
 func (as AttributeStatement) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	asxml, err := d.CreateElement("saml:AttributeStatement")
 	if err != nil {
@@ -253,14 +244,19 @@ func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	defer axml.AutoFree()
 
 	axml.SetAttribute("Name", a.Name)
-	for _, attr := range a.Attrs {
-		if nsuri := attr.Name.Space; nsuri != "" {
-			prefix, err := axml.LookupNamespacePrefix(nsuri)
-			if err != nil {
-				return nil, err
+	for k, v := range a.Attrs {
+		if i := strings.IndexByte(k, ':'); i > 0 {
+			if k[:i] == "xmlns" {
+				if err := axml.SetNamespace(v, k[i+1:], false); err != nil {
+					return nil, err
+				}
+			} else {
+				if _, err := axml.LookupNamespaceURI(k[:i]); err != nil {
+					return nil, err
+				}
 			}
 
-			axml.SetAttribute(prefix+":"+attr.Name.Local, attr.Value)
+			axml.SetAttribute(k, v)
 		}
 	}
 
@@ -345,7 +341,7 @@ func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	arxml.MakeMortal()
 	defer arxml.AutoFree()
 
-	arxml.SetNamespace("urn:oasis:names:tc:SAML:2.0:protocol",  "samlp", false)
+	arxml.SetNamespace("urn:oasis:names:tc:SAML:2.0:protocol", "samlp", false)
 	arxml.SetAttribute("ID", ar.ID)
 	arxml.SetAttribute("ProviderName", ar.ProviderName)
 	arxml.SetAttribute("Version", ar.Version)

@@ -3,7 +3,6 @@ package saml
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"encoding/xml"
 	"testing"
 	"time"
 
@@ -45,16 +44,10 @@ func TestAssertion_XML(t *testing.T) {
 		},
 	)
 	a.AddAttribute(Attribute{
-		Attrs: []xml.Attr{
-			ns.X500.XMLAttr(),
-			xml.Attr{
-				Name:  xml.Name{Local: "x500:Encoding"},
-				Value: "LDAP",
-			},
-			xml.Attr{
-				Name:  xml.Name{Local: "NameFormat"},
-				Value: "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-			},
+		Attrs: map[string]string{
+			"xmlns:" + ns.X500.Prefix:     ns.X500.URI,
+			ns.X500.AddPrefix("Encoding"): "LDAP",
+			"NameFormat":                  ns.NameFormatURI,
 		},
 		Name:         "urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
 		FriendlyName: "eduPersonAffiliation",

@@ -1,12 +1,11 @@
 package ns
 
-import "encoding/xml"
-
 type Namespace struct {
 	Prefix string
 	URI    string
 }
 
+const NameFormatURI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
 var (
 	SAML              = NewNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion")
 	SAMLP             = NewNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol")
@@ -20,22 +19,10 @@ var (
 func NewNamespace(prefix, uri string) *Namespace {
 	return &Namespace{
 		Prefix: prefix,
-		URI: uri,
+		URI:    uri,
 	}
 }
 
-func (ns Namespace) XMLName(name string) xml.Name {
-	return ns.AddPrefix(xml.Name{Local: name})
-}
-
-func (ns Namespace) AddPrefix(n xml.Name) xml.Name {
-	n.Local = ns.Prefix + ":" + n.Local
-	return n
-}
-
-func (ns Namespace) XMLAttr() xml.Attr {
-	return xml.Attr{
-		Name: xml.Name{Local: "xmlns:"+ns.Prefix},
-		Value: ns.URI,
-	}
+func (ns Namespace) AddPrefix(n string) string {
+	return ns.Prefix + ":" + n
 }
