@@ -82,18 +82,18 @@ type RequestedAuthnContext struct {
 
 // Request represents the RequestAbstracttype from SAML specification
 type Request struct {
-	Consent     string `xml:",attr"`
-	Destination string `xml:",attr"`
+	Consent     string
+	Destination string
 	// ID is an identifier for the request. It is of type xs:ID and
 	// MUST follow the requirementsspecified in Section 1.3.4 for
 	// identifier uniqueness. The values of the ID attribute in a
 	// request and the InResponseTo attribute in the corresponding
 	// response MUST match
-	ID           string    `xml:",attr"`
-	IssueInstant time.Time `xml:",attr"`
+	ID           string
+	IssueInstant time.Time
 	Issuer       string
 	Signature    Signature
-	Version      string `xml:",attr"`
+	Version      string
 
 	// Extensions are not supported for now
 }
@@ -101,19 +101,19 @@ type Request struct {
 type AuthnRequest struct {
 	Request
 	NameIDPolicy                   *NameIDPolicy
-	ForceAuthn                     bool `xml:",attr"`
-	IsPassive                      bool `xml:",attr"`
+	ForceAuthn                     bool
+	IsPassive                      bool
 	ProtocolBinding                string
-	AssertionConsumerServiceURL    string `xml:",attr"`
-	AssertionConsumerServiceIndex  uint8  `xml:",attr"`
-	AttributeConsumingServiceIndex uint8  `xml:",attr"`
-	ProviderName                   string `xml:,attr"`
+	AssertionConsumerServiceURL    string
+	AssertionConsumerServiceIndex  uint8
+	AttributeConsumingServiceIndex uint8
+	ProviderName                   string
 	RequestedAuthnContext          *RequestedAuthnContext
 }
 
 type Conditions struct {
-	NotBefore           time.Time `xml:",attr"`
-	NotOnOrAfter        time.Time `xml:",attr"`
+	NotBefore           time.Time
+	NotOnOrAfter        time.Time
 	AudienceRestriction []AudienceRestriction
 	Condition           []interface{}
 }
@@ -127,9 +127,9 @@ type NameID struct {
 
 type SubjectConfirmation struct {
 	Method       ConfirmationMethod
-	InResponseTo string    `xml:"InResponseTo"`
-	Recipient    string    `xml:"Recipient"`
-	NotOnOrAfter time.Time `xml:"NotOnOrAfter"`
+	InResponseTo string
+	Recipient    string
+	NotOnOrAfter time.Time
 }
 type Subject struct {
 	NameID
@@ -139,10 +139,10 @@ type Assertion struct {
 	AuthnStatement     AuthnStatement
 	AttributeStatement AttributeStatement
 	Conditions         Conditions
-	ID                 string    `xml:",attr"`
-	IssueInstant       time.Time `xml:",attr"`
-	Issuer             string    `xml:"Issuer"`
+	ID                 string
+	IssueInstant       time.Time
+	Issuer             string
 	Signature          Signature
 	Subject            Subject
-	Version            string `xml:",attr"`
+	Version            string
 }
