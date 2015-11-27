@@ -57,11 +57,11 @@ func TestAssertion_XML(t *testing.T) {
 		FriendlyName: "eduPersonAffiliation",
 		Values: []AttributeValue{
 			AttributeValue{
-				Type:  "xs:string",
+				Type:  ns.XMLSchema.AddPrefix("string"),
 				Value: "member",
 			},
 			AttributeValue{
-				Type:  "xs:string",
+				Type:  ns.XMLSchema.AddPrefix("string"),
 				Value: "staff",
 			},
 		},
@@ -94,6 +94,8 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 	s.Sign(root, privkey, "")
+
+	t.Logf("%s", c14ndoc.Dump(true))
 }
 
 func TestAuthnRequest(t *testing.T) {
