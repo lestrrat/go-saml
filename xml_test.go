@@ -72,7 +72,7 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 
-	p := libxml2.NewParser(libxml2.XmlParseDTDLoad | libxml2.XmlParseDTDAttr | libxml2.XmlParseNoEnt)
+	p := libxml2.NewParser(libxml2.XMLParseDTDLoad | libxml2.XMLParseDTDAttr | libxml2.XMLParseNoEnt)
 	c14ndoc, err := p.ParseString(xmlstr)
 	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
 		return
@@ -119,7 +119,7 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	p := libxml2.NewParser(libxml2.XmlParseDTDLoad | libxml2.XmlParseDTDAttr | libxml2.XmlParseNoEnt)
+	p := libxml2.NewParser(libxml2.XMLParseDTDLoad | libxml2.XMLParseDTDAttr | libxml2.XMLParseNoEnt)
 	c14ndoc, err := p.ParseString(xmlstr)
 	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
 		return
