@@ -1,10 +1,10 @@
 package saml
 
 import (
-	"errors"
 	"time"
 
 	"github.com/lestrrat/go-libxml2"
+	"github.com/lestrrat/go-xmlsec"
 )
 
 // TimeFormat is the format defined in xs:dateTime
@@ -23,14 +23,6 @@ const (
 	PasswordProtectedTransport  AuthenticationMethod = `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`
 )
 
-var (
-	ErrUnsupportedDigestMethod    = errors.New("unsupported digest method")
-	ErrUnsupportedSignatureMethod = errors.New("unsupported signature method")
-	ErrUnsupportedTransform       = errors.New("unsupported transform")
-	ErrUnsupportedC14NMethod      = errors.New("unsupported c14n method")
-	ErrUnsupportedKeyType         = errors.New("unsupported signature key type")
-)
-
 // Signer defines an interface of things that can generate XML
 // signature for the given node. The node being passed should
 // point to the XML element to which the signature should be
@@ -40,37 +32,11 @@ type Signer interface {
 	Sign(libxml2.Node, interface{}) error
 }
 
-type C14NMethod string
-
-const (
-	C14N1_0 C14NMethod = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
-)
-
-type SignatureMethod string
-
-const (
-	RSA_SHA1 SignatureMethod = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
-	DSA_SHA1 SignatureMethod = "http://www.w3.org/2000/09/xmldsig#dsa-sha1"
-)
-
-type Transform string
-
-const (
-	EnvelopedSignature Transform = "http://www.w3.org/2000/09/xmldsig#enveloped-signature"
-)
-
-type DigestMethod string
-
-const (
-	SHA1 DigestMethod = "http://www.w3.org/2000/09/xmldsig#sha1"
-)
-
 type GenericSign struct {
-	c14nmethod C14NMethod
-	digmethod  DigestMethod
-	sigmethod  SignatureMethod
-	template   string
-	transform  Transform
+	c14nmethod xmlsec.TransformID
+	digmethod  xmlsec.TransformID
+	sigmethod  xmlsec.TransformID
+	transform  xmlsec.TransformID
 }
 
 type AttributeValue struct {

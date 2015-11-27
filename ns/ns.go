@@ -6,6 +6,7 @@ type Namespace struct {
 }
 
 const NameFormatURI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+
 var (
 	SAML              = NewNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion")
 	SAMLP             = NewNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol")

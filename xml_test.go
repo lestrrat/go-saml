@@ -9,6 +9,7 @@ import (
 	"github.com/lestrrat/go-libxml2"
 	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/ns"
+	"github.com/lestrrat/go-xmlsec"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,7 @@ func TestAssertion_XML(t *testing.T) {
 		Subject: Subject{
 			NameID: NameID{
 				Format: NameIDFormatTransient,
-				Value: "3f7b3dcf-1674-4ecd-92c8-1544f346baf8",
+				Value:  "3f7b3dcf-1674-4ecd-92c8-1544f346baf8",
 			},
 			SubjectConfirmation: SubjectConfirmation{
 				InResponseTo: "aaf23196-1773-2113-474a-fe114412ab72",
@@ -88,11 +89,11 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 
-	s, err := NewGenericSign(RSA_SHA1, EnvelopedSignature, SHA1, C14N1_0)
+	s, err := NewGenericSign(xmlsec.RsaSha1, xmlsec.Enveloped, xmlsec.Sha1, xmlsec.ExclC14N)
 	if !assert.NoError(t, err, "NewGenericSign succeeds") {
 		return
 	}
-	s.Sign(root, privkey)
+	s.Sign(root, privkey, "")
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
@@ -135,11 +136,11 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	s, err := NewGenericSign(RSA_SHA1, EnvelopedSignature, SHA1, C14N1_0)
+	s, err := NewGenericSign(xmlsec.RsaSha1, xmlsec.Enveloped, xmlsec.Sha1, xmlsec.ExclC14N)
 	if !assert.NoError(t, err, "NewGenericSign succeeds") {
 		return
 	}
-	s.Sign(root, privkey)
+	s.Sign(root, privkey, "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest")
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
