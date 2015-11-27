@@ -4,6 +4,10 @@ func (am AuthenticationMethod) String() string {
 	return string(am)
 }
 
+func (cm ConfirmationMethod) String() string {
+	return string(cm)
+}
+
 func (n NameIDFormat) String() string {
 	return string(n)
 }

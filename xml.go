@@ -104,7 +104,7 @@ func (sc SubjectConfirmation) MakeXMLNode(d *libxml2.Document) (libxml2.Node, er
 		method = Bearer
 	}
 
-	scxml.SetAttribute("Method", method)
+	scxml.SetAttribute("Method", method.String())
 
 	scd, err := d.CreateElement(ns.SAML.AddPrefix("SubjectConfirmationData"))
 	if err != nil {

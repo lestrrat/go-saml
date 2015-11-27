@@ -160,7 +160,7 @@ type NameID struct {
 }
 
 type SubjectConfirmation struct {
-	Method       string
+	Method       ConfirmationMethod
 	InResponseTo string    `xml:"InResponseTo"`
 	Recipient    string    `xml:"Recipient"`
 	NotOnOrAfter time.Time `xml:"NotOnOrAfter"`
