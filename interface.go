@@ -92,7 +92,6 @@ type Request struct {
 	ID           string
 	IssueInstant time.Time
 	Issuer       string
-	Signature    Signature
 	Version      string
 
 	// Extensions are not supported for now
@@ -118,8 +117,6 @@ type Conditions struct {
 	Condition           []interface{}
 }
 
-// TODO: This is a way more complex type
-type Signature string
 type NameID struct {
 	Format NameIDFormat
 	Value  string
@@ -142,7 +139,6 @@ type Assertion struct {
 	ID                 string
 	IssueInstant       time.Time
 	Issuer             string
-	Signature          Signature
 	Subject            Subject
 	Version            string
 }

@@ -50,7 +50,7 @@ func (a Assertion) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	iss.AppendText(a.Issuer)
 	axml.AddChild(iss)
 
-	for _, noder := range []MakeXMLNoder{a.Signature, a.Subject, a.Conditions, a.AuthnStatement, a.AttributeStatement} {
+	for _, noder := range []MakeXMLNoder{a.Subject, a.Conditions, a.AuthnStatement, a.AttributeStatement} {
 		n, err := noder.MakeXMLNode(d)
 		if err != nil {
 			return nil, err
@@ -285,19 +285,6 @@ func (a Attribute) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	}
 	axml.MakePersistent()
 	return axml, nil
-}
-
-func (s Signature) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	sigxml, err := d.CreateElementNS("http://www.w3.org/2000/09/xmldsig#", "ds:Signature")
-	if err != nil {
-		return nil, err
-	}
-	sigxml.MakeMortal()
-	defer sigxml.AutoFree()
-
-	// XXX Later
-	sigxml.MakePersistent()
-	return sigxml, nil
 }
 
 func (rac RequestedAuthnContext) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
