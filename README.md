@@ -5,3 +5,13 @@
 [![GoDoc](https://godoc.org/github.com/lestrrat/go-xmlsec?status.svg)](https://godoc.org/github.com/lestrrat/go-xmlsec)
 
 (Work In Progress) Ideas and Tools for SAML
+
+## See Also
+
+* https://github.com/lestrrat/go-xmlsec
+* https://github.com/lestrrat/go-libxml2
+* https://www.oasis-open.org/committees/download.php/56777/sstc-saml-core-errata-2.0-wd-07-diff.pdf
+
+## Credits
+
+* Work on this library was generously sponsored by HDE Inc (https://www.hde.co.jp)
