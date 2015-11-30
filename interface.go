@@ -100,6 +100,7 @@ type Response struct {
 	Message
 	Status       string
 	InResponseTo string
+	Assertion    Assertion
 }
 
 // Request represents the RequestAbstracttype from SAML specification

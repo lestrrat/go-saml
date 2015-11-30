@@ -156,3 +156,48 @@ func TestAuthnRequest(t *testing.T) {
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
+
+func TestResponse(t *testing.T) {
+	res := NewResponse()
+	res.ID = "809707f0030a5d00620c9d9df97f627afe9dcc24"
+	res.Version = "2.0"
+	res.IssueInstant = time.Now()
+	res.Issuer = "http://sp.example.com/metadata"
+	res.Destination = "http://idp.example.com/sso"
+
+	xmlstr, err := res.Serialize()
+	if !assert.NoError(t, err, "Serialize() succeeds") {
+		return
+	}
+
+	p := libxml2.NewParser(libxml2.XMLParseDTDLoad | libxml2.XMLParseDTDAttr | libxml2.XMLParseNoEnt)
+	c14ndoc, err := p.ParseString(xmlstr)
+	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
+		return
+	}
+	defer c14ndoc.Free()
+
+	root, err := c14ndoc.DocumentElement()
+	if !assert.NoError(t, err, "DocumentElement succeeds") {
+		return
+	}
+
+	privkey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if !assert.NoError(t, err, "GenerateKey succeeds") {
+		return
+	}
+
+	s, err := NewGenericSign(xmlsec.RsaSha1, xmlsec.Enveloped, xmlsec.Sha1, xmlsec.ExclC14N)
+	if !assert.NoError(t, err, "NewGenericSign succeeds") {
+		return
+	}
+
+	key, err := xmlsec.LoadKeyFromRSAPrivateKey(privkey)
+	if !assert.NoError(t, err, "Load key from RSA private key succeeds") {
+		return
+	}
+
+	s.Sign(root, key, "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest")
+
+	t.Logf("%s", c14ndoc.Dump(true))
+}

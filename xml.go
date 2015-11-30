@@ -31,6 +31,10 @@ func (a Assertion) Serialize() (string, error) {
 	return serialize(a)
 }
 
+func (r Response) Serialize() (string, error) {
+	return serialize(r)
+}
+
 func (a Assertion) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	axml, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("Assertion"))
 	if err != nil {
@@ -333,22 +337,40 @@ func (ar AuthnRequest) Serialize() (string, error) {
 }
 
 func (res Response) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	resxml, err := res.Message.MakeXMLNode(d)
+	oresxml, err := res.Message.MakeXMLNode(d)
 	if err != nil {
 		return nil, err
 	}
+
+	resxml := oresxml.(*libxml2.Element)
 	resxml.MakeMortal()
 	defer resxml.AutoFree()
 
+	resxml.SetNodeName("Response")
+	resxml.SetNamespace(ns.SAMLP.URI, ns.SAMLP.Prefix, true)
+	resxml.SetNamespace(ns.SAML.URI, ns.SAML.Prefix, false)
+
 	if v := res.InResponseTo; v != "" {
-		resxml.(*libxml2.Element).SetAttribute("InResponseTo", v)
+		resxml.SetAttribute("InResponseTo", v)
 	}
-	st, err := d.CreateElement("Status")
+	st, err := d.CreateElement("samlp:Status")
 	if err != nil {
 		return nil, err
 	}
-	st.AppendText(res.Status)
+	stc, err := d.CreateElement("samlp:StatusCode")
+	if err != nil {
+		return nil, err
+	}
+	stc.SetAttribute("Value", res.Status)
+	st.AddChild(stc)
 	resxml.AddChild(st)
+
+	axml, err := res.Assertion.MakeXMLNode(d)
+	if err != nil {
+		return nil, err
+	}
+
+	resxml.AddChild(axml)
 
 	resxml.MakePersistent()
 

@@ -23,15 +23,15 @@ func (a *Assertion) AddAttribute(att Attribute) error {
 }
 
 func NewNameIDPolicy(f NameIDFormat, allowCreate bool) *NameIDPolicy {
-	return &NameIDPolicy {
-		Format: f,
+	return &NameIDPolicy{
+		Format:      f,
 		AllowCreate: allowCreate,
 	}
 }
 
 func NewRequestedAuthnContext(cmp, classRef string) *RequestedAuthnContext {
 	return &RequestedAuthnContext{
-		Comparison: cmp,
+		Comparison:           cmp,
 		AuthnContextClassRef: classRef,
 	}
 }
@@ -44,3 +44,8 @@ func NewAuthnRequest() *AuthnRequest {
 	}
 }
 
+func NewResponse() *Response {
+	return &Response{
+		Message: Message{},
+	}
+}
