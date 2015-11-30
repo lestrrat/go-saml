@@ -38,8 +38,9 @@ func NewRequestedAuthnContext(cmp, classRef string) *RequestedAuthnContext {
 
 func NewAuthnRequest() *AuthnRequest {
 	return &AuthnRequest{
-		Request: Request{},
+		Request: Request{
+			Message: Message{},
+		},
 	}
 }
-
 

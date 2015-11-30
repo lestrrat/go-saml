@@ -80,8 +80,7 @@ type RequestedAuthnContext struct {
 	AuthnContextClassRef string
 }
 
-// Request represents the RequestAbstracttype from SAML specification
-type Request struct {
+type Message struct {
 	Consent     string
 	Destination string
 	// ID is an identifier for the request. It is of type xs:ID and
@@ -95,6 +94,17 @@ type Request struct {
 	Version      string
 
 	// Extensions are not supported for now
+}
+
+type Response struct {
+	Message
+	Status       string
+	InResponseTo string
+}
+
+// Request represents the RequestAbstracttype from SAML specification
+type Request struct {
+	Message
 }
 
 type AuthnRequest struct {

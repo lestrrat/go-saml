@@ -332,30 +332,76 @@ func (ar AuthnRequest) Serialize() (string, error) {
 	return serialize(ar)
 }
 
-func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
-	arxml, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("AuthnRequest"))
+func (res Response) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
+	resxml, err := res.Message.MakeXMLNode(d)
 	if err != nil {
 		return nil, err
 	}
-	arxml.MakeMortal()
-	defer arxml.AutoFree()
+	resxml.MakeMortal()
+	defer resxml.AutoFree()
 
-	arxml.SetNamespace(ns.SAMLP.URI, ns.SAMLP.Prefix, false)
-	arxml.SetAttribute("ID", ar.ID)
-	arxml.SetAttribute("ProviderName", ar.ProviderName)
-	arxml.SetAttribute("Version", ar.Version)
-	arxml.SetAttribute("IssueInstant", ar.IssueInstant.Format(TimeFormat))
-	arxml.SetAttribute("Destination", ar.Destination)
-	arxml.SetAttribute("ProtocolBinding", ar.ProtocolBinding)
-	arxml.SetAttribute("AssertionConsumerServiceURL", ar.AssertionConsumerServiceURL)
+	if v := res.InResponseTo; v != "" {
+		resxml.(*libxml2.Element).SetAttribute("InResponseTo", v)
+	}
+	st, err := d.CreateElement("Status")
+	if err != nil {
+		return nil, err
+	}
+	st.AppendText(res.Status)
+	resxml.AddChild(st)
+
+	resxml.MakePersistent()
+
+	return resxml, nil
+}
+
+func (m Message) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
+	mxml, err := d.CreateElement("Message")
+	if err != nil {
+		return nil, err
+	}
+	mxml.MakeMortal()
+	defer mxml.AutoFree()
+
+	mxml.SetAttribute("ID", m.ID)
+	mxml.SetAttribute("Version", m.Version)
+	mxml.SetAttribute("IssueInstant", m.IssueInstant.Format(TimeFormat))
+	if v := m.Destination; v != "" {
+		mxml.SetAttribute("Destination", v)
+	}
+	if v := m.Consent; v != "" {
+		mxml.SetAttribute("Consent", v)
+	}
 
 	// XXX Comeback later.
 	iss, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("Issuer"))
 	if err != nil {
 		return nil, err
 	}
-	iss.AppendText(ar.Issuer)
-	arxml.AddChild(iss)
+	iss.AppendText(m.Issuer)
+	mxml.AddChild(iss)
+
+	mxml.MakePersistent()
+
+	return mxml, nil
+}
+
+func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
+	oarxml, err := ar.Request.MakeXMLNode(d)
+	if err != nil {
+		return nil, err
+	}
+	arxml := oarxml.(*libxml2.Element)
+
+	arxml.MakeMortal()
+	defer arxml.AutoFree()
+
+	arxml.SetNodeName("AuthnRequest")
+	arxml.SetNamespace(ns.SAML.URI, ns.SAML.Prefix, true)
+
+	arxml.SetAttribute("ProviderName", ar.ProviderName)
+	arxml.SetAttribute("ProtocolBinding", ar.ProtocolBinding)
+	arxml.SetAttribute("AssertionConsumerServiceURL", ar.AssertionConsumerServiceURL)
 
 	if nip := ar.NameIDPolicy; nip != nil {
 		nipxml, err := nip.MakeXMLNode(d)
