@@ -14,7 +14,7 @@ func NewGenericSign(m, t, d, c xmlsec.TransformID) (*GenericSign, error) {
 	}, nil
 }
 
-func (s GenericSign) Sign(n libxml2.Node, key interface{}, id string) error {
+func (s GenericSign) Sign(n libxml2.Node, key *xmlsec.Key, id string) error {
 	xmlsec.Init()
 	defer xmlsec.Shutdown()
 

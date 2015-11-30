@@ -93,7 +93,13 @@ func TestAssertion_XML(t *testing.T) {
 	if !assert.NoError(t, err, "NewGenericSign succeeds") {
 		return
 	}
-	s.Sign(root, privkey, "")
+
+	key, err := xmlsec.LoadKeyFromRSAPrivateKey(privkey)
+	if !assert.NoError(t, err, "Loading key succeeds") {
+		return
+	}
+
+	s.Sign(root, key, "")
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
@@ -140,7 +146,13 @@ func TestAuthnRequest(t *testing.T) {
 	if !assert.NoError(t, err, "NewGenericSign succeeds") {
 		return
 	}
-	s.Sign(root, privkey, "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest")
+
+	key, err := xmlsec.LoadKeyFromRSAPrivateKey(privkey)
+	if !assert.NoError(t, err, "Load key from RSA private key succeeds") {
+		return
+	}
+
+	s.Sign(root, key, "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest")
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
