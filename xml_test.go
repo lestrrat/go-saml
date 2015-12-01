@@ -201,3 +201,44 @@ func TestResponse(t *testing.T) {
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
+
+func TestParseAuthnRequest(t *testing.T) {
+	const xmlsrc = `<?xml version="1.0" encoding="utf-8"?>
+<saml:AuthnRequest xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" AssertionConsumerServiceURL="http://sp.example.com/acs" Destination="http://idp.example.com/sso" ID="809707f0030a5d00620c9d9df97f627afe9dcc24" IssueInstant="2015-11-30T18:18:31" ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" ProviderName="FooProvider" Version="2.0">
+  <saml:Issuer>http://sp.example.com/metadata</saml:Issuer>
+  <saml:NameIDPolicy AllowCreate="true" Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"/>
+  <saml:RequestedAuthnContext Comparison="exact">
+    <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml:AuthnContextClassRef>
+  </saml:RequestedAuthnContext>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#" Id="urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest">
+    <SignedInfo>
+      <CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+      <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+      <Reference>
+        <Transforms>
+          <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+        </Transforms>
+        <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+        <DigestValue>GuGtxIMZFN7XWsKRJW8x6/+Xf9Y=</DigestValue>
+      </Reference>
+    </SignedInfo>
+    <SignatureValue>v3S/CRBOf/TTvkGF+0exmOVQLz1ITgbAJ0+OUx1LSvAbxFxl/jqP+FLMz+qN5baC
+QKYit5KcJWBjqfNukfKGhvdV8wR02m56FJQtYU+Xb42i1tHvS4h4krJiCBekn19M
+2l01QaLnZxBhNYPoXkcsVGEOJOZVokPEbXEdze5n5Svaajdlfww9NpIbP5G4gQ76
+QAzvSaZ34JkNN2sNQgRN9G+KT689M4I2i7OATNyckqguR8I3qjrxtAvVaDKNITTI
+9yt7pHcf1Y6JA9WO3NXLsHq+z0KetS4qnBQ1vFr7nKxKJDOcBuqIVzGWuTgo98/W
+uruUEt5gXJrdbUpiUAGnHg==</SignatureValue>
+  </Signature>
+</saml:AuthnRequest>`
+	req, err := ParseAuthnRequestString(xmlsrc)
+	if !assert.NoError(t, err, "ParseAuthnRequestString succeeds") {
+		return
+	}
+
+	xmlstr, err := req.Serialize()
+	if !assert.NoError(t, err, "Serialize succeeds") {
+		return
+	}
+
+	t.Logf("%s", xmlstr)
+}

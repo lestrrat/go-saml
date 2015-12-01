@@ -1,8 +1,10 @@
 package saml
 
 import (
+	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/lestrrat/go-libxml2"
 	"github.com/lestrrat/go-saml/ns"
@@ -406,6 +408,70 @@ func (m Message) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
 	mxml.MakePersistent()
 
 	return mxml, nil
+}
+
+func ParseAuthnRequestString(src string) (*AuthnRequest, error) {
+	p := libxml2.NewParser(libxml2.XMLParseDTDLoad | libxml2.XMLParseDTDAttr | libxml2.XMLParseNoEnt)
+	doc, err := p.ParseString(src)
+	if err != nil {
+		return nil, errors.New("failed to parse xml: " + err.Error())
+	}
+
+	root, err := doc.DocumentElement()
+	if err != nil {
+		return nil, errors.New("failed to fetch document element: " + err.Error())
+	}
+
+	ar := &AuthnRequest{}
+	if err := ar.PopulateFromXML(root); err != nil {
+		return nil, errors.New("failed to populate from xml: " + err.Error())
+	}
+	return ar, nil
+}
+
+func (r *Request) PopulateFromXML(n libxml2.Node) error {
+	xpc, err := libxml2.NewXPathContext(n)
+	if err != nil {
+		return errors.New("failed to create xpath context: " + err.Error())
+	}
+
+	if err := xpc.RegisterNS(ns.SAML.Prefix, ns.SAML.URI); err != nil {
+		return errors.New("failed to register namespace for xpath context: " + err.Error())
+	}
+
+	r.ID = xpc.FindValue("@ID").String()
+	r.Version = xpc.FindValue("@Version").String()
+	s := xpc.FindValue("@IssueInstant")
+	if s.Valid() {
+		t, err := time.Parse(TimeFormat, s.String())
+		if err == nil {
+			r.IssueInstant = t
+		}
+	}
+
+	r.Issuer = xpc.FindValue(ns.SAML.AddPrefix("Issuer")).String()
+	return nil
+}
+
+func (ar *AuthnRequest) PopulateFromXML(n libxml2.Node) error {
+	if err := ar.Request.PopulateFromXML(n); err != nil {
+		return err
+	}
+
+	xpc, err := libxml2.NewXPathContext(n)
+	if err != nil {
+		return errors.New("failed to create xpath context: " + err.Error())
+	}
+
+	if err := xpc.RegisterNS(ns.SAML.Prefix, ns.SAML.URI); err != nil {
+		return errors.New("failed to register namespace for xpath context: " + err.Error())
+	}
+
+	ar.ProviderName = xpc.FindValue("@ProviderName").String()
+	ar.ProtocolBinding = xpc.FindValue("@ProtocolBinding").String()
+	ar.AssertionConsumerServiceURL = xpc.FindValue("@AssertionConsumerServiceURL").String()
+
+	return nil
 }
 
 func (ar AuthnRequest) MakeXMLNode(d *libxml2.Document) (libxml2.Node, error) {
