@@ -8,6 +8,7 @@ type Namespace struct {
 const NameFormatURI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
 
 var (
+	Metadata          = NewNamespace("md", "urn:oasis:names:tc:SAML:2.0:metadata")
 	SAML              = NewNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion")
 	SAMLP             = NewNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol")
 	XMLDSignature     = NewNamespace("ds", "http://www.w3.org/2000/09/xmldsig#")

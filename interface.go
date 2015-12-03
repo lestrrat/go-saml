@@ -153,3 +153,32 @@ type Assertion struct {
 	Subject            Subject
 	Version            string
 }
+
+type EntityID string
+type Endpoint struct {
+	ProtocolBinding  string
+	Location         string
+	ResponseLocation string
+}
+type EntityDescriptor struct {
+	ID            string
+	ValidUntil    time.Time
+	CacheDuration int
+	Name          string
+	SPSSODescriptor SSODescriptor
+}
+
+type AssertionConsumerService struct {
+	ProtocolBinding string
+	Location        string
+	Index           int
+}
+
+type SSODescriptor struct {
+	Type    string // IDP or SP
+	Service AssertionConsumerService
+}
+
+type Metadata struct {
+	EntityDescriptors []EntityDescriptor
+}
