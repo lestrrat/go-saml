@@ -3,7 +3,7 @@ package saml
 import (
 	"time"
 
-	"github.com/lestrrat/go-libxml2"
+	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-xmlsec"
 )
 
@@ -29,7 +29,7 @@ const (
 // injected into. key should be whatever appropriate key type
 // that you will be using to sign
 type Signer interface {
-	Sign(libxml2.Node, interface{}) error
+	Sign(types.Node, interface{}) error
 }
 
 type GenericSign struct {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lestrrat/go-libxml2"
+	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/ns"
 	"github.com/lestrrat/go-xmlsec"
@@ -72,7 +72,7 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 
-	p := libxml2.NewParser(libxml2.XMLParseDTDLoad | libxml2.XMLParseDTDAttr | libxml2.XMLParseNoEnt)
+	p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
 	c14ndoc, err := p.ParseString(xmlstr)
 	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
 		return
@@ -125,7 +125,7 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	p := libxml2.NewParser(libxml2.XMLParseDTDLoad | libxml2.XMLParseDTDAttr | libxml2.XMLParseNoEnt)
+	p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
 	c14ndoc, err := p.ParseString(xmlstr)
 	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
 		return
@@ -170,7 +170,7 @@ func TestResponse(t *testing.T) {
 		return
 	}
 
-	p := libxml2.NewParser(libxml2.XMLParseDTDLoad | libxml2.XMLParseDTDAttr | libxml2.XMLParseNoEnt)
+	p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
 	c14ndoc, err := p.ParseString(xmlstr)
 	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
 		return

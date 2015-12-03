@@ -1,7 +1,7 @@
 package saml
 
 import (
-	"github.com/lestrrat/go-libxml2"
+	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-xmlsec"
 )
 
@@ -14,7 +14,7 @@ func NewGenericSign(m, t, d, c xmlsec.TransformID) (*GenericSign, error) {
 	}, nil
 }
 
-func (s GenericSign) Sign(n libxml2.Node, key *xmlsec.Key, id string) error {
+func (s GenericSign) Sign(n types.Node, key *xmlsec.Key, id string) error {
 	xmlsec.Init()
 	defer xmlsec.Shutdown()
 
