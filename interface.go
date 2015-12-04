@@ -5,7 +5,7 @@ import (
 
 	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-saml/nameid"
-	"github.com/lestrrat/go-xmlsec"
+	"github.com/lestrrat/go-xmlsec/dsig"
 )
 
 // MakeXMLNoder defines the interface for things that can marshal
@@ -35,10 +35,10 @@ type Signer interface {
 }
 
 type GenericSign struct {
-	c14nmethod xmlsec.TransformID
-	digmethod  xmlsec.TransformID
-	sigmethod  xmlsec.TransformID
-	transform  xmlsec.TransformID
+	c14nmethod dsig.TransformID
+	digmethod  dsig.TransformID
+	sigmethod  dsig.TransformID
+	transform  dsig.TransformID
 }
 
 type AttributeValue struct {

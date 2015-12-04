@@ -10,7 +10,8 @@ import (
 	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/nameid"
 	"github.com/lestrrat/go-saml/ns"
-	"github.com/lestrrat/go-xmlsec"
+	"github.com/lestrrat/go-xmlsec/crypto"
+	"github.com/lestrrat/go-xmlsec/dsig"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -90,12 +91,12 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 
-	s, err := NewGenericSign(xmlsec.RsaSha1, xmlsec.Enveloped, xmlsec.Sha1, xmlsec.ExclC14N)
+	s, err := NewGenericSign(dsig.RsaSha1, dsig.Enveloped, dsig.Sha1, dsig.ExclC14N)
 	if !assert.NoError(t, err, "NewGenericSign succeeds") {
 		return
 	}
 
-	key, err := xmlsec.LoadKeyFromRSAPrivateKey(privkey)
+	key, err := crypto.LoadKeyFromRSAPrivateKey(privkey)
 	if !assert.NoError(t, err, "Loading key succeeds") {
 		return
 	}
@@ -143,12 +144,12 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	s, err := NewGenericSign(xmlsec.RsaSha1, xmlsec.Enveloped, xmlsec.Sha1, xmlsec.ExclC14N)
+	s, err := NewGenericSign(dsig.RsaSha1, dsig.Enveloped, dsig.Sha1, dsig.ExclC14N)
 	if !assert.NoError(t, err, "NewGenericSign succeeds") {
 		return
 	}
 
-	key, err := xmlsec.LoadKeyFromRSAPrivateKey(privkey)
+	key, err := crypto.LoadKeyFromRSAPrivateKey(privkey)
 	if !assert.NoError(t, err, "Load key from RSA private key succeeds") {
 		return
 	}
@@ -188,12 +189,12 @@ func TestResponse(t *testing.T) {
 		return
 	}
 
-	s, err := NewGenericSign(xmlsec.RsaSha1, xmlsec.Enveloped, xmlsec.Sha1, xmlsec.ExclC14N)
+	s, err := NewGenericSign(dsig.RsaSha1, dsig.Enveloped, dsig.Sha1, dsig.ExclC14N)
 	if !assert.NoError(t, err, "NewGenericSign succeeds") {
 		return
 	}
 
-	key, err := xmlsec.LoadKeyFromRSAPrivateKey(privkey)
+	key, err := crypto.LoadKeyFromRSAPrivateKey(privkey)
 	if !assert.NoError(t, err, "Load key from RSA private key succeeds") {
 		return
 	}
