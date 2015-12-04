@@ -8,10 +8,16 @@ import (
 )
 
 type CommonDescriptor struct {
-	ID            string
-	ValidUntil    time.Time
 	CacheDuration int
+	ID            string
 	Name          string
+	ValidUntil    time.Time
+}
+
+type RoleDescriptor struct {
+	CommonDescriptor
+	ErrorURL                    string
+	ProtocolSupportEnumerations []string
 }
 
 type SSODescriptor struct {
@@ -22,10 +28,11 @@ type SSODescriptor struct {
 }
 
 type IDPDescriptor struct {
-	CommonDescriptor
+	RoleDescriptor
 	SSODescriptor
 
-	ContactPerson     *ContactPerson
+	ContactPerson *ContactPerson
+	KeyDescriptor *KeyDescriptor
 
 	// WantAuthnRequestsSigned is an optional attribute that indicates a
 	// requirement for the <samlp:AuthnRequest> messages received by this
@@ -63,10 +70,11 @@ type IDPDescriptor struct {
 type EntityDescriptor interface {
 	saml.MakeXMLNoder
 
-	ID() string
-	ValidUntil() time.Time
 	CacheDuration() int
+	ID() string
 	Name() string
+	ProtocolSupportEnumerations() []string
+	ValidUntil() time.Time
 }
 
 type SPDescriptor struct {
@@ -86,4 +94,9 @@ type ContactPerson struct {
 	SurName         string
 	EmailAddress    string
 	TelephoneNumber string
+}
+
+type KeyDescriptor struct {
+	Use string
+	Key saml.MakeXMLNoder
 }

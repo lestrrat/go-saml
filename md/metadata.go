@@ -1,6 +1,7 @@
 package md
 
 import (
+	"bytes"
 	"errors"
 	"time"
 
@@ -50,7 +51,31 @@ func (desc IDPDescriptor) MakeXMLNode(doc types.Document) (types.Node, error) {
 		return nil, err
 	}
 	root.AddChild(idpdesc)
-	idpdesc.SetAttribute("protocolSupportEnumeration", "urn:oasis:names:tc:SAML:2.0:protocol")
+
+	if len(desc.RoleDescriptor.ProtocolSupportEnumerations) == 0 {
+		desc.RoleDescriptor.ProtocolSupportEnumerations = []string{ns.SAMLP.URI}
+	}
+
+	protobuf := bytes.Buffer{}
+	for i, proto := range desc.RoleDescriptor.ProtocolSupportEnumerations {
+		protobuf.WriteString(proto)
+		if i != len(desc.RoleDescriptor.ProtocolSupportEnumerations)-1 {
+			protobuf.WriteString(" ")
+		}
+	}
+	idpdesc.SetAttribute("protocolSupportEnumeration", protobuf.String())
+
+	if k := desc.KeyDescriptor; k != nil {
+		kdesc, err := k.MakeXMLNode(doc)
+		if err != nil {
+			return nil, err
+		}
+		idpdesc.AddChild(kdesc)
+	}
+
+	if v := desc.ErrorURL; v != "" {
+		idpdesc.SetAttribute("errorURL", v)
+	}
 
 	for _, sls := range desc.SingleLogoutServices() {
 		sls.Name = "SingleLogoutService"
@@ -102,6 +127,10 @@ func (id IDPDescriptor) CacheDuration() int {
 
 func (id IDPDescriptor) ValidUntil() time.Time {
 	return id.CommonDescriptor.ValidUntil
+}
+
+func (id IDPDescriptor) ProtocolSupportEnumerations() []string {
+	return id.RoleDescriptor.ProtocolSupportEnumerations
 }
 
 func (cp ContactPerson) MakeXMLNode(doc types.Document) (types.Node, error) {
@@ -162,4 +191,23 @@ func (cp ContactPerson) MakeXMLNode(doc types.Document) (types.Node, error) {
 	root.MakePersistent()
 
 	return root, nil
+}
+
+func (kd KeyDescriptor) MakeXMLNode(doc types.Document) (types.Node, error) {
+	kdnode, err := doc.CreateElement("md:KeyDescriptor")
+	if err != nil {
+		return nil, err
+	}
+	defer kdnode.AutoFree()
+	kdnode.MakeMortal()
+
+	keynode, err := kd.Key.MakeXMLNode(doc)
+	if err != nil {
+		return nil, err
+	}
+	kdnode.AddChild(keynode)
+
+	kdnode.MakePersistent()
+
+	return kdnode, nil
 }
