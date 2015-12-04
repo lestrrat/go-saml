@@ -5,18 +5,30 @@ import (
 
 	"github.com/lestrrat/go-saml"
 	"github.com/lestrrat/go-saml/binding"
+	"github.com/lestrrat/go-saml/nameid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMetadata(t *testing.T) {
 	md := saml.Metadata{
 		EntityDescriptors: []saml.EntityDescriptor{
-			saml.EntityDescriptor{
-				ID: "https://github.com/lestrrat/go-saml",
-				SPSSODescriptor: saml.SSODescriptor{
-					Service: saml.AssertionConsumerService{
-						ProtocolBinding: binding.HTTPPost,
-						Location: "https://github.com/lestrrat/go-saml",
+			saml.IDPDescriptor{
+				CommonDescriptor: saml.CommonDescriptor{
+					ID: "https://github.com/lestrrat/go-saml",
+				},
+				SSODescriptor: saml.SSODescriptor{
+					SingleLogoutService: []saml.Endpoint{
+						saml.Endpoint{
+							ProtocolBinding: binding.HTTPRedirect,
+							Location: `https://github.com/lestrrat/go-saml/dummy/idp/logout`,
+						},
+					},
+					NameIDFormat: nameid.Transient,
+				},
+				SingleSignOnService: []saml.Endpoint{
+					saml.Endpoint{
+						ProtocolBinding: binding.HTTPRedirect,
+						Location: `https://github.com/lestrrat/go-saml/dummy/idp/sso`,
 					},
 				},
 			},

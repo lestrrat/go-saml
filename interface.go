@@ -7,6 +7,12 @@ import (
 	"github.com/lestrrat/go-xmlsec"
 )
 
+// MakeXMLNoder defines the interface for things that can marshal
+// itself into libxml2 Nodes
+type MakeXMLNoder interface {
+	MakeXMLNode(types.Document) (types.Node, error)
+}
+
 // TimeFormat is the format defined in xs:dateTime
 const TimeFormat = "2006-01-02T15:04:05"
 
@@ -156,16 +162,15 @@ type Assertion struct {
 
 type EntityID string
 type Endpoint struct {
+	Name             string
 	ProtocolBinding  string
 	Location         string
 	ResponseLocation string
 }
-type EntityDescriptor struct {
-	ID            string
-	ValidUntil    time.Time
-	CacheDuration int
-	Name          string
-	SPSSODescriptor SSODescriptor
+type IndexedEndpoint struct {
+	Endpoint
+	Index     int
+	IsDefault bool
 }
 
 type AssertionConsumerService struct {
@@ -174,8 +179,69 @@ type AssertionConsumerService struct {
 	Index           int
 }
 
+type CommonDescriptor struct {
+	ID            string
+	ValidUntil    time.Time
+	CacheDuration int
+	Name          string
+}
+
 type SSODescriptor struct {
-	Type    string // IDP or SP
+	ArtifactResolutionService []IndexedEndpoint
+	SingleLogoutService       []Endpoint
+	ManageNameIDService       []Endpoint
+	NameIDFormat              NameIDFormat
+}
+
+type IDPDescriptor struct {
+	CommonDescriptor
+	SSODescriptor
+
+	// WantAuthnRequestsSigned is an optional attribute that indicates a
+	// requirement for the <samlp:AuthnRequest> messages received by this
+	// identity provider to be signed. If omitted, the value is assumed to
+	// be false.
+	WantAuthnRequestsSigned bool
+	// SignleSingOnService holds one or more elements of type EndpointType
+	// that describe endpoints that support the profiles of the Authentication
+	// Request protocol defined in [SAMLProf]. All identity providers support
+	// at least one such endpoint, by definition. The ResponseLocation attribute
+	// MUST be omitted.
+	SingleSignOnService []Endpoint
+	// NameIDMappingService holds zero or more elements of type EndpointType
+	// that describe endpoints that support the Name Identifier Mapping profile
+	// defined in [SAMLProf]. The ResponseLocation attribute MUST be omitted
+	NameIDMappingService []Endpoint
+	// AssertionIDRequestService holds zero or more elements of type EndpointType
+	// that describe endpoints that support the profile of the Assertion Request
+	// protocol defined in [SAMLProf] or the special URI binding for assertion
+	// requests defined in [SAMLBind].
+	AssertionIDRequestService []Endpoint
+	// AttributeProfile holds zero or more elements of type anyURI that enumerate
+	// the attribute profiles supported by this identity provider. See [SAMLProf]
+	// for some possible values for this element.
+	AttributeProfile []string
+	// Attribute holds zero or more elements that identify the SAML attributes
+	// supported by the identity provider.  Specific values MAY optionally be
+	// included, indicating that only certain values permitted by the attribute's
+	// definition are supported. In this context, "support" for an attribute
+	// means that the identity provider has the capability to include it when
+	// delivering assertions during single sign-on.
+	Attribute []Attribute
+}
+
+type EntityDescriptor interface {
+	MakeXMLNoder
+
+	ID() string
+	ValidUntil() time.Time
+	CacheDuration() int
+	Name() string
+}
+
+type SPDescriptor struct {
+	CommonDescriptor
+
 	Service AssertionConsumerService
 }
 

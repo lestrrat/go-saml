@@ -13,10 +13,6 @@ import (
 	"github.com/lestrrat/go-saml/ns"
 )
 
-type MakeXMLNoder interface {
-	MakeXMLNode(types.Document) (types.Node, error)
-}
-
 func serialize(n MakeXMLNoder) (string, error) {
 	d := dom.CreateDocument()
 	defer d.Free()
