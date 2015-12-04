@@ -2,6 +2,7 @@ package saml
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-libxml2/xpath"
+	"github.com/lestrrat/go-saml/nameid"
 	"github.com/lestrrat/go-saml/ns"
 )
 
@@ -320,7 +322,7 @@ func (nip *NameIDPolicy) PopulateFromXML(n types.Element) error {
 	}
 
 	nip.AllowCreate = xpath.Bool(xpc.Find("@AllowCreate"))
-	nip.Format = NameIDFormat(xpath.String(xpc.Find("@Format")))
+	nip.Format = nameid.Format(xpath.String(xpc.Find("@Format")))
 	nip.SPNameQualifier = xpath.String(xpc.Find("@SPNameQualifier"))
 	return nil
 }
@@ -536,4 +538,39 @@ func (ar AuthnRequest) MakeXMLNode(d types.Document) (types.Node, error) {
 	}
 	arxml.MakePersistent()
 	return arxml, nil
+}
+
+func (e Endpoint) MakeXMLNode(doc types.Document) (types.Node, error) {
+	root, err := doc.CreateElement(fmt.Sprintf("md:%s", e.Name))
+	if err != nil {
+		return nil, err
+	}
+
+	if v := e.ProtocolBinding; v != "" {
+		root.SetAttribute("Binding", v)
+	}
+	if v := e.Location; v != "" {
+		root.SetAttribute("Location", v)
+	}
+	if v := e.ResponseLocation; v != "" {
+		root.SetAttribute("ResponseLocation", v)
+	}
+
+	return root, nil
+}
+
+func (s AssertionConsumerService) MakeXMLNode(doc types.Document) (types.Node, error) {
+	root, err := doc.CreateElement("md:AssertionConsumerService")
+	if err != nil {
+		return nil, err
+	}
+	defer root.AutoFree()
+	root.MakeMortal()
+
+	root.SetAttribute("Binding", s.ProtocolBinding)
+	root.SetAttribute("Location", s.Location)
+	root.SetAttribute("index", strconv.Itoa(s.Index))
+
+	root.MakePersistent()
+	return root, nil
 }

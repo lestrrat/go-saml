@@ -1,15 +1,15 @@
 package saml
 
+import (
+	"github.com/lestrrat/go-saml/nameid"
+)
+
 func (am AuthenticationMethod) String() string {
 	return string(am)
 }
 
 func (cm ConfirmationMethod) String() string {
 	return string(cm)
-}
-
-func (n NameIDFormat) String() string {
-	return string(n)
 }
 
 func (c *Conditions) AddAudienceRestriction(ar AudienceRestriction) error {
@@ -22,7 +22,7 @@ func (a *Assertion) AddAttribute(att Attribute) error {
 	return nil
 }
 
-func NewNameIDPolicy(f NameIDFormat, allowCreate bool) *NameIDPolicy {
+func NewNameIDPolicy(f nameid.Format, allowCreate bool) *NameIDPolicy {
 	return &NameIDPolicy{
 		Format:      f,
 		AllowCreate: allowCreate,

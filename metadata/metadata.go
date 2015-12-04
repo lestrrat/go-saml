@@ -1,14 +1,12 @@
-package saml
+package metadata
 
 import (
 	"errors"
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/lestrrat/go-libxml2/dom"
 	"github.com/lestrrat/go-libxml2/types"
-	"github.com/lestrrat/go-saml/nameid"
+	"github.com/lestrrat/go-saml"
 	"github.com/lestrrat/go-saml/ns"
 )
 
@@ -32,36 +30,7 @@ func (m Metadata) MakeXMLNode(doc types.Document) (types.Node, error) {
 	return nil, errors.New("unimplemented")
 }
 
-func (nif NameIDFormat) MakeXMLNode(doc types.Document) (types.Node, error) {
-	root, err := doc.CreateElement("md:NameIDFormat")
-	if err != nil {
-		return nil, err
-	}
-
-	root.AppendText(nameid.Transient)
-	return root, nil
-}
-
-func (e Endpoint) MakeXMLNode(doc types.Document) (types.Node, error) {
-	root, err := doc.CreateElement(fmt.Sprintf("md:%s", e.Name))
-	if err != nil {
-		return nil, err
-	}
-
-	if v := e.ProtocolBinding; v != "" {
-		root.SetAttribute("Binding", v)
-	}
-	if v := e.Location; v != "" {
-		root.SetAttribute("Location", v)
-	}
-	if v := e.ResponseLocation; v != "" {
-		root.SetAttribute("ResponseLocation", v)
-	}
-
-	return root, nil
-}
-
-func (desc IDPDescriptor) SingleLogoutServices() []Endpoint {
+func (desc IDPDescriptor) SingleLogoutServices() []saml.Endpoint {
 	return desc.SSODescriptor.SingleLogoutService
 }
 
@@ -109,22 +78,6 @@ func (desc IDPDescriptor) MakeXMLNode(doc types.Document) (types.Node, error) {
 
 	root.MakePersistent()
 
-	return root, nil
-}
-
-func (s AssertionConsumerService) MakeXMLNode(doc types.Document) (types.Node, error) {
-	root, err := doc.CreateElement("md:AssertionConsumerService")
-	if err != nil {
-		return nil, err
-	}
-	defer root.AutoFree()
-	root.MakeMortal()
-
-	root.SetAttribute("Binding", s.ProtocolBinding)
-	root.SetAttribute("Location", s.Location)
-	root.SetAttribute("index", strconv.Itoa(s.Index))
-
-	root.MakePersistent()
 	return root, nil
 }
 
