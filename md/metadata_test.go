@@ -1,23 +1,23 @@
-package metadata_test
+package md_test
 
 import (
 	"testing"
 
 	"github.com/lestrrat/go-saml"
 	"github.com/lestrrat/go-saml/binding"
-	"github.com/lestrrat/go-saml/metadata"
+	"github.com/lestrrat/go-saml/md"
 	"github.com/lestrrat/go-saml/nameid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMetadata(t *testing.T) {
-	md := metadata.Metadata{
-		EntityDescriptors: []metadata.EntityDescriptor{
-			metadata.IDPDescriptor{
-				CommonDescriptor: metadata.CommonDescriptor{
+	md := md.Metadata{
+		EntityDescriptors: []md.EntityDescriptor{
+			md.IDPDescriptor{
+				CommonDescriptor: md.CommonDescriptor{
 					ID: "https://github.com/lestrrat/go-saml",
 				},
-				SSODescriptor: metadata.SSODescriptor{
+				SSODescriptor: md.SSODescriptor{
 					SingleLogoutService: []saml.Endpoint{
 						saml.Endpoint{
 							ProtocolBinding: binding.HTTPRedirect,
