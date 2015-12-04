@@ -76,6 +76,13 @@ func (desc IDPDescriptor) MakeXMLNode(doc types.Document) (types.Node, error) {
 		idpdesc.AddChild(ssosdesc)
 	}
 
+	if cp := desc.ContactPerson; cp != nil {
+		cpnode, err := cp.MakeXMLNode(doc)
+		if err != nil {
+			return nil, err
+		}
+		root.AddChild(cpnode)
+	}
 	root.MakePersistent()
 
 	return root, nil
@@ -95,4 +102,64 @@ func (id IDPDescriptor) CacheDuration() int {
 
 func (id IDPDescriptor) ValidUntil() time.Time {
 	return id.CommonDescriptor.ValidUntil
+}
+
+func (cp ContactPerson) MakeXMLNode(doc types.Document) (types.Node, error) {
+	root, err := doc.CreateElement("md:ContactPerson")
+	if err != nil {
+		return nil, err
+	}
+	defer root.AutoFree()
+	root.MakeMortal()
+
+	root.SetAttribute("contactType", cp.Type)
+
+	if v := cp.Company; v != "" {
+		c, err := doc.CreateElement("md:Company")
+		if err != nil {
+			return nil, err
+		}
+		c.AppendText(v)
+		root.AddChild(c)
+	}
+
+	if v := cp.GivenName; v != "" {
+		gn, err := doc.CreateElement("md:GivenName")
+		if err != nil {
+			return nil, err
+		}
+		gn.AppendText(v)
+		root.AddChild(gn)
+	}
+
+	if v := cp.SurName; v != "" {
+		sn, err := doc.CreateElement("md:SurName")
+		if err != nil {
+			return nil, err
+		}
+		sn.AppendText(v)
+		root.AddChild(sn)
+	}
+
+	if v := cp.EmailAddress; v != "" {
+		ea, err := doc.CreateElement("md:EmailAddress")
+		if err != nil {
+			return nil, err
+		}
+		ea.AppendText(v)
+		root.AddChild(ea)
+	}
+
+	if v := cp.TelephoneNumber; v != "" {
+		tn, err := doc.CreateElement("md:TelephoneNumber")
+		if err != nil {
+			return nil, err
+		}
+		tn.AppendText(v)
+		root.AddChild(tn)
+	}
+
+	root.MakePersistent()
+
+	return root, nil
 }

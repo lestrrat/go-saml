@@ -25,6 +25,8 @@ type IDPDescriptor struct {
 	CommonDescriptor
 	SSODescriptor
 
+	ContactPerson     *ContactPerson
+
 	// WantAuthnRequestsSigned is an optional attribute that indicates a
 	// requirement for the <samlp:AuthnRequest> messages received by this
 	// identity provider to be signed. If omitted, the value is assumed to
@@ -77,3 +79,11 @@ type Metadata struct {
 	EntityDescriptors []EntityDescriptor
 }
 
+type ContactPerson struct {
+	Type            string
+	Company         string
+	GivenName       string
+	SurName         string
+	EmailAddress    string
+	TelephoneNumber string
+}

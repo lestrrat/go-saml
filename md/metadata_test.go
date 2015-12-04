@@ -14,6 +14,13 @@ func TestMetadata(t *testing.T) {
 	md := md.Metadata{
 		EntityDescriptors: []md.EntityDescriptor{
 			md.IDPDescriptor{
+				ContactPerson: &md.ContactPerson{
+					Type:            "technical",
+					GivenName:       "Daisuke",
+					SurName:         "Maki",
+					EmailAddress:    "lestrrat@foo.bar.baz",
+					TelephoneNumber: "000-1234-5678",
+				},
 				CommonDescriptor: md.CommonDescriptor{
 					ID: "https://github.com/lestrrat/go-saml",
 				},
