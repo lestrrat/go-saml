@@ -201,6 +201,10 @@ func (kd KeyDescriptor) MakeXMLNode(doc types.Document) (types.Node, error) {
 	defer kdnode.AutoFree()
 	kdnode.MakeMortal()
 
+	if v := kd.Use; v != "" {
+		kdnode.SetAttribute("use", v)
+	}
+
 	keynode, err := kd.Key.MakeXMLNode(doc)
 	if err != nil {
 		return nil, err

@@ -41,6 +41,7 @@ func TestMetadata(t *testing.T) {
 				},
 				KeyDescriptor: &md.KeyDescriptor{
 					Key: key.NewDSA(&privkey.PublicKey),
+					Use: "signing",
 				},
 				RoleDescriptor: md.RoleDescriptor{
 					CommonDescriptor: md.CommonDescriptor{
