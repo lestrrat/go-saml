@@ -8,6 +8,7 @@ import (
 
 	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-saml/binding"
+	"github.com/lestrrat/go-saml/nameid"
 	"github.com/lestrrat/go-saml/ns"
 	"github.com/lestrrat/go-xmlsec"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +26,7 @@ func TestAssertion_XML(t *testing.T) {
 		Issuer:       "https://idp.example.org/SAML2",
 		Subject: Subject{
 			NameID: NameID{
-				Format: NameIDFormatTransient,
+				Format: nameid.Transient,
 				Value:  "3f7b3dcf-1674-4ecd-92c8-1544f346baf8",
 			},
 			SubjectConfirmation: SubjectConfirmation{
@@ -114,7 +115,7 @@ func TestAuthnRequest(t *testing.T) {
 	ar.ProviderName = "FooProvider"
 	ar.ProtocolBinding = binding.HTTPPost
 	ar.AssertionConsumerServiceURL = "http://sp.example.com/acs"
-	ar.NameIDPolicy = NewNameIDPolicy(NameIDFormatEmailAddress, true)
+	ar.NameIDPolicy = NewNameIDPolicy(nameid.EmailAddress, true)
 	ar.RequestedAuthnContext = NewRequestedAuthnContext(
 		"exact",
 		"urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",

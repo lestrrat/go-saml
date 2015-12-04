@@ -22,10 +22,6 @@ type NameIDFormat string
 
 const (
 	Bearer                      ConfirmationMethod   = `urn:oasis:names:tc:SAML:2.0:cm:bearer`
-	NameIDFormatEmailAddress    NameIDFormat         = `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress`
-	NameIDFormatTransient       NameIDFormat         = `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`
-	NameIDFormatUnspecified     NameIDFormat         = `urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified`
-	NameIDFormatX509SubjectName NameIDFormat         = `urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName`
 	PasswordProtectedTransport  AuthenticationMethod = `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`
 )
 
