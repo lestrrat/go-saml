@@ -423,12 +423,27 @@ func (m Message) MakeXMLNode(d types.Document) (types.Node, error) {
 	return mxml, nil
 }
 
+func ParseAuthnRequest(src []byte) (*AuthnRequest, error) {
+	p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
+	doc, err := p.Parse(src)
+	if err != nil {
+		return nil, errors.New("failed to parse xml: " + err.Error())
+	}
+
+	return constructAuthnRequest(doc)
+}
+
 func ParseAuthnRequestString(src string) (*AuthnRequest, error) {
 	p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
 	doc, err := p.ParseString(src)
 	if err != nil {
 		return nil, errors.New("failed to parse xml: " + err.Error())
 	}
+
+	return constructAuthnRequest(doc)
+}
+
+func constructAuthnRequest(doc types.Document) (*AuthnRequest, error) {
 
 	root, err := doc.DocumentElement()
 	if err != nil {
