@@ -227,7 +227,7 @@ func (as AttributeStatement) MakeXMLNode(d types.Document) (types.Node, error) {
 	return asxml, nil
 }
 
-func (av AttributeValue) MakeNodeXML(d types.Document) (types.Node, error) {
+func (av AttributeValue) MakeXMLNode(d types.Document) (types.Node, error) {
 	avxml, err := d.CreateElement(ns.SAML.AddPrefix("AttributeValue"))
 	if err != nil {
 		return nil, err
@@ -284,7 +284,7 @@ func (a Attribute) MakeXMLNode(d types.Document) (types.Node, error) {
 	}
 
 	for _, v := range a.Values {
-		vxml, err := v.MakeNodeXML(d)
+		vxml, err := v.MakeXMLNode(d)
 		if err != nil {
 			return nil, err
 		}
@@ -444,7 +444,6 @@ func ParseAuthnRequestString(src string) (*AuthnRequest, error) {
 }
 
 func constructAuthnRequest(doc types.Document) (*AuthnRequest, error) {
-
 	root, err := doc.DocumentElement()
 	if err != nil {
 		return nil, errors.New("failed to fetch document element: " + err.Error())
