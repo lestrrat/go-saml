@@ -33,10 +33,6 @@ func (a Assertion) Serialize() (string, error) {
 	return serialize(a)
 }
 
-func (r Response) Serialize() (string, error) {
-	return serialize(r)
-}
-
 func (a Assertion) MakeXMLNode(d types.Document) (types.Node, error) {
 	axml, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("Assertion"))
 	if err != nil {
@@ -344,78 +340,6 @@ func (nip NameIDPolicy) MakeXMLNode(d types.Document) (types.Node, error) {
 	}
 	nipxml.MakePersistent()
 	return nipxml, nil
-}
-
-func (res Response) MakeXMLNode(d types.Document) (types.Node, error) {
-	oresxml, err := res.Message.MakeXMLNode(d)
-	if err != nil {
-		return nil, err
-	}
-
-	resxml := oresxml.(types.Element)
-	resxml.MakeMortal()
-	defer resxml.AutoFree()
-
-	resxml.SetNodeName("Response")
-	resxml.SetNamespace(ns.SAMLP.URI, ns.SAMLP.Prefix, true)
-	resxml.SetNamespace(ns.SAML.URI, ns.SAML.Prefix, false)
-
-	if v := res.InResponseTo; v != "" {
-		resxml.SetAttribute("InResponseTo", v)
-	}
-	st, err := d.CreateElement("samlp:Status")
-	if err != nil {
-		return nil, err
-	}
-	stc, err := d.CreateElement("samlp:StatusCode")
-	if err != nil {
-		return nil, err
-	}
-	stc.SetAttribute("Value", res.Status)
-	st.AddChild(stc)
-	resxml.AddChild(st)
-
-	axml, err := res.Assertion.MakeXMLNode(d)
-	if err != nil {
-		return nil, err
-	}
-
-	resxml.AddChild(axml)
-
-	resxml.MakePersistent()
-
-	return resxml, nil
-}
-
-func (m Message) MakeXMLNode(d types.Document) (types.Node, error) {
-	mxml, err := d.CreateElement("Message")
-	if err != nil {
-		return nil, err
-	}
-	mxml.MakeMortal()
-	defer mxml.AutoFree()
-
-	mxml.SetAttribute("ID", m.ID)
-	mxml.SetAttribute("Version", m.Version)
-	mxml.SetAttribute("IssueInstant", m.IssueInstant.Format(TimeFormat))
-	if v := m.Destination; v != "" {
-		mxml.SetAttribute("Destination", v)
-	}
-	if v := m.Consent; v != "" {
-		mxml.SetAttribute("Consent", v)
-	}
-
-	// XXX Comeback later.
-	iss, err := d.CreateElementNS(ns.SAML.URI, ns.SAML.AddPrefix("Issuer"))
-	if err != nil {
-		return nil, err
-	}
-	iss.AppendText(m.Issuer)
-	mxml.AddChild(iss)
-
-	mxml.MakePersistent()
-
-	return mxml, nil
 }
 
 // makeXPC wraps a node and creates an XPathContext that has all of the

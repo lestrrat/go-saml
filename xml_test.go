@@ -161,9 +161,6 @@ func TestAuthnRequest(t *testing.T) {
 
 func TestResponse(t *testing.T) {
 	res := NewResponse()
-	res.ID = "809707f0030a5d00620c9d9df97f627afe9dcc24"
-	res.Version = "2.0"
-	res.IssueInstant = time.Now()
 	res.Issuer = "http://sp.example.com/metadata"
 	res.Destination = "http://idp.example.com/sso"
 

@@ -9,6 +9,12 @@ import (
 	"github.com/lestrrat/go-saml/ns"
 )
 
+func NewAuthnRequest() *AuthnRequest {
+	areq := &AuthnRequest{}
+	areq.Request.Message.Initialize()
+	return areq
+}
+
 func (ar AuthnRequest) Serialize() (string, error) {
 	return serialize(ar)
 }
@@ -85,6 +91,7 @@ func (ar AuthnRequest) MakeXMLNode(d types.Document) (types.Node, error) {
 	defer arxml.AutoFree()
 
 	arxml.SetNodeName("AuthnRequest")
+	arxml.SetNamespace(ns.SAML.URI, ns.SAML.Prefix, false)
 	arxml.SetNamespace(ns.SAMLP.URI, ns.SAMLP.Prefix, true)
 
 	arxml.SetAttribute("ProviderName", ar.ProviderName)

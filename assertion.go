@@ -1,8 +1,6 @@
 package saml
 
-import (
-	"github.com/lestrrat/go-saml/nameid"
-)
+import "github.com/lestrrat/go-saml/nameid"
 
 func (am AuthenticationMethod) String() string {
 	return string(am)
@@ -36,16 +34,3 @@ func NewRequestedAuthnContext(cmp, classRef string) *RequestedAuthnContext {
 	}
 }
 
-func NewAuthnRequest() *AuthnRequest {
-	return &AuthnRequest{
-		Request: Request{
-			Message: Message{},
-		},
-	}
-}
-
-func NewResponse() *Response {
-	return &Response{
-		Message: Message{},
-	}
-}
