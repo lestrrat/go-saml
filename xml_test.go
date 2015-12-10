@@ -6,10 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lestrrat/go-libxml2/dom"
 	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/nameid"
 	"github.com/lestrrat/go-saml/ns"
+	"github.com/lestrrat/go-xmlsec"
 	"github.com/lestrrat/go-xmlsec/crypto"
 	"github.com/lestrrat/go-xmlsec/dsig"
 	"github.com/stretchr/testify/assert"
@@ -80,33 +82,12 @@ func TestAssertion_XML(t *testing.T) {
 		return
 	}
 	defer c14ndoc.Free()
-
-	root, err := c14ndoc.DocumentElement()
-	if !assert.NoError(t, err, "DocumentElement succeeds") {
-		return
-	}
-
-	privkey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if !assert.NoError(t, err, "GenerateKey succeeds") {
-		return
-	}
-
-	s, err := NewGenericSign(dsig.RsaSha1, dsig.Enveloped, dsig.Sha1, dsig.ExclC14N)
-	if !assert.NoError(t, err, "NewGenericSign succeeds") {
-		return
-	}
-
-	key, err := crypto.LoadKeyFromRSAPrivateKey(privkey)
-	if !assert.NoError(t, err, "Loading key succeeds") {
-		return
-	}
-
-	s.Sign(root, key, "")
-
-	t.Logf("%s", c14ndoc.Dump(true))
 }
 
 func TestAuthnRequest(t *testing.T) {
+	xmlsec.Init()
+	defer xmlsec.Shutdown()
+
 	ar := NewAuthnRequest()
 	ar.ID = "809707f0030a5d00620c9d9df97f627afe9dcc24"
 	ar.Version = "2.0"
@@ -144,8 +125,20 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	s, err := NewGenericSign(dsig.RsaSha1, dsig.Enveloped, dsig.Sha1, dsig.ExclC14N)
-	if !assert.NoError(t, err, "NewGenericSign succeeds") {
+	signer, err := dsig.NewSignature(root, dsig.ExclC14N, dsig.RsaSha1, "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest")
+	if !assert.NoError(t, err, "dsig.NewSignature succeeds") {
+		return
+	}
+
+	if !assert.NoError(t, signer.AddReference(dsig.Sha1, "", "", ""), "AddReference succeeds") {
+		return
+	}
+
+	if !assert.NoError(t, signer.AddTransform(dsig.Enveloped), "AddTransform succeeds") {
+		return
+	}
+
+	if !assert.NoError(t, signer.AddKeyValue(), "AddKeyValue succeeds") {
 		return
 	}
 
@@ -154,12 +147,16 @@ func TestAuthnRequest(t *testing.T) {
 		return
 	}
 
-	s.Sign(root, key, "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest")
+	if !assert.NoError(t, signer.Sign(key), "Sign succeeds") {
+		return
+	}
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }
 
 func TestResponse(t *testing.T) {
+	xmlsec.Init()
+	defer xmlsec.Shutdown()
 	res := NewResponse()
 	res.Issuer = "http://sp.example.com/metadata"
 	res.Destination = "http://idp.example.com/sso"
@@ -170,8 +167,19 @@ func TestResponse(t *testing.T) {
 	}
 
 	p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
-	c14ndoc, err := p.ParseString(xmlstr)
-	if !assert.NoError(t, err, "Parse C14N XML doc succeeds") {
+	doc, err := p.ParseString(xmlstr)
+	if !assert.NoError(t, err, "Parse XML doc succeeds") {
+		return
+	}
+	defer doc.Free()
+
+	c14nxml, err := dom.C14NSerialize{Mode: dom.C14NExclusive1_0}.Serialize(doc)
+	if !assert.NoError(t, err, "C14NSerialize.Serialize succeeds") {
+		return
+	}
+
+	c14ndoc, err := p.ParseString(c14nxml)
+	if !assert.NoError(t, err, "Parse C14N doc succeeds") {
 		return
 	}
 	defer c14ndoc.Free()
@@ -186,8 +194,20 @@ func TestResponse(t *testing.T) {
 		return
 	}
 
-	s, err := NewGenericSign(dsig.RsaSha1, dsig.Enveloped, dsig.Sha1, dsig.ExclC14N)
-	if !assert.NoError(t, err, "NewGenericSign succeeds") {
+	signer, err := dsig.NewSignature(root, dsig.ExclC14N, dsig.RsaSha1, "urn:oasis:names:tc:SAML:2.0:protocol:Response")
+	if !assert.NoError(t, err, "dsig.NewSignature succeeds") {
+		return
+	}
+
+	if !assert.NoError(t, signer.AddReference(dsig.Sha1, "", "", ""), "AddReference succeeds") {
+		return
+	}
+
+	if !assert.NoError(t, signer.AddTransform(dsig.Enveloped), "AddTransform succeeds") {
+		return
+	}
+
+	if !assert.NoError(t, signer.AddKeyValue(), "AddKeyValue succeeds") {
 		return
 	}
 
@@ -196,7 +216,10 @@ func TestResponse(t *testing.T) {
 		return
 	}
 
-	s.Sign(root, key, "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest")
+	if !assert.NoError(t, signer.Sign(key), "Sign succeeds") {
+		t.Logf("%s", c14ndoc.Dump(true))
+		return
+	}
 
 	t.Logf("%s", c14ndoc.Dump(true))
 }

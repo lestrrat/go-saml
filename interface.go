@@ -5,7 +5,6 @@ import (
 
 	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-saml/nameid"
-	"github.com/lestrrat/go-xmlsec/dsig"
 )
 
 // MakeXMLNoder defines the interface for things that can marshal
@@ -21,6 +20,10 @@ type StatusCode string
 
 // Error satisfies the "error" interface.
 func (s StatusCode) Error() string {
+	return s.String()
+}
+
+func (s StatusCode) String() string {
 	return string(s)
 }
 
@@ -47,7 +50,7 @@ const (
 // Quoth: "System entities are free to define more specific status codes by
 // defining appropriate URI references.
 const (
-	// ErrAuthnFailed means the responding provider was unable to 
+	// ErrAuthnFailed means the responding provider was unable to
 	// successfully authenticate the principal.
 	ErrAuthnFailed StatusCode = "urn:oasis:names:tc:SAML:2.0:status:AuthnFailed"
 
@@ -141,25 +144,9 @@ type AuthenticationMethod string
 type ConfirmationMethod string
 
 const (
-	Bearer                      ConfirmationMethod   = `urn:oasis:names:tc:SAML:2.0:cm:bearer`
-	PasswordProtectedTransport  AuthenticationMethod = `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`
+	Bearer                     ConfirmationMethod   = `urn:oasis:names:tc:SAML:2.0:cm:bearer`
+	PasswordProtectedTransport AuthenticationMethod = `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`
 )
-
-// Signer defines an interface of things that can generate XML
-// signature for the given node. The node being passed should
-// point to the XML element to which the signature should be
-// injected into. key should be whatever appropriate key type
-// that you will be using to sign
-type Signer interface {
-	Sign(types.Node, interface{}) error
-}
-
-type GenericSign struct {
-	c14nmethod dsig.TransformID
-	digmethod  dsig.TransformID
-	sigmethod  dsig.TransformID
-	transform  dsig.TransformID
-}
 
 type AttributeValue struct {
 	Type  string
@@ -220,7 +207,7 @@ type Message struct {
 
 type Response struct {
 	Message
-	Status       string
+	Status       StatusCode
 	InResponseTo string
 	Assertion    Assertion
 }

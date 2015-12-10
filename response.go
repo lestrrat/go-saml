@@ -40,7 +40,7 @@ func (res Response) MakeXMLNode(d types.Document) (types.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	stc.SetAttribute("Value", res.Status)
+	stc.SetAttribute("Value", res.Status.String())
 	st.AddChild(stc)
 	resxml.AddChild(st)
 
