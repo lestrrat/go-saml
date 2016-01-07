@@ -22,10 +22,10 @@ func NewAuthnRequest() *AuthnRequest {
 // Encode takes the Authentication Request, generates the XML string,
 // deflates it, and base64 encodes it. URL encoding is done in the HTTP
 // protocol.
-func (ar AuthnRequest) Encode() (string, error) {
+func (ar AuthnRequest) Encode() ([]byte, error) {
 	xmlstr, err := ar.Serialize()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	buf := bytes.Buffer{}
@@ -33,14 +33,23 @@ func (ar AuthnRequest) Encode() (string, error) {
 	defer w.Close()
 	io.WriteString(w, xmlstr)
 
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
-// Decode takes in a string, decodes it from base64, inflates it, and
-// then parses the resulting XML
-func Decode(s string) (*AuthnRequest, error) {
+// DecodeAuthnRequestString takes in a byte buffer, decodes it from base64,
+// inflates it, and then parses the resulting XML
+func DecodeAuthnRequestString(s string) (*AuthnRequest, error) {
+	return decodeAuthnRequest(strings.NewReader(s))
+}
+
+// DecodeAuthnRequest takes in a byte buffer, decodes it from base64,
+// inflates it, and then parses the resulting XML
+func DecodeAuthnRequest(b []byte) (*AuthnRequest, error) {
+	return decodeAuthnRequest(bytes.NewReader(b))
+}
+
+func decodeAuthnRequest(in io.Reader) (*AuthnRequest, error) {
 	buf := bytes.Buffer{}
-	in := strings.NewReader(s)
 	r, err := zlib.NewReader(in)
 	if err != nil {
 		return nil, err
