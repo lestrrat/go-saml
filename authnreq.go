@@ -1,7 +1,11 @@
 package saml
 
 import (
+	"bytes"
+	"compress/zlib"
 	"errors"
+	"io"
+	"strings"
 
 	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-libxml2/types"
@@ -13,6 +17,38 @@ func NewAuthnRequest() *AuthnRequest {
 	areq := &AuthnRequest{}
 	areq.Request.Message.Initialize()
 	return areq
+}
+
+// Encode takes the Authentication Request, generates the XML string,
+// deflates it, and base64 encodes it. URL encoding is done in the HTTP
+// protocol.
+func (ar AuthnRequest) Encode() (string, error) {
+	xmlstr, err := ar.Serialize()
+	if err != nil {
+		return "", err
+	}
+
+	buf := bytes.Buffer{}
+	w := zlib.NewWriter(&buf)
+	defer w.Close()
+	io.WriteString(w, xmlstr)
+
+	return buf.String(), nil
+}
+
+// Decode takes in a string, decodes it from base64, inflates it, and
+// then parses the resulting XML
+func Decode(s string) (*AuthnRequest, error) {
+	buf := bytes.Buffer{}
+	in := strings.NewReader(s)
+	r, err := zlib.NewReader(in)
+	if err != nil {
+		return nil, err
+	}
+
+	io.Copy(&buf, r)
+
+	return ParseAuthnRequest(buf.Bytes())
 }
 
 func (ar AuthnRequest) Serialize() (string, error) {
