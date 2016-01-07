@@ -2,7 +2,7 @@ package saml
 
 import (
 	"bytes"
-	"compress/zlib"
+	"compress/flate"
 	"encoding/base64"
 	"errors"
 	"io"
@@ -30,14 +30,17 @@ func (ar AuthnRequest) Encode() ([]byte, error) {
 	}
 
 	buf := bytes.Buffer{}
-	w := zlib.NewWriter(&buf)
+	w, err := flate.NewWriter(&buf, 1)
+	if err != nil {
+		return nil, err
+	}
 	defer w.Close()
 	io.WriteString(w, xmlstr)
 	w.Flush()
 
 	raw := buf.Bytes()
-	ret := make([]byte, base64.URLEncoding.EncodedLen(len(raw)))
-	base64.URLEncoding.Encode(ret, raw)
+	ret := make([]byte, base64.StdEncoding.EncodedLen(len(raw)))
+	base64.StdEncoding.Encode(ret, raw)
 
 	return ret, nil
 }
@@ -55,13 +58,18 @@ func DecodeAuthnRequest(b []byte) (*AuthnRequest, error) {
 }
 
 func decodeAuthnRequest(in io.Reader) (*AuthnRequest, error) {
-	r, err := zlib.NewReader(base64.NewDecoder(base64.URLEncoding, in))
-	if err != nil {
+	r := flate.NewReader(base64.NewDecoder(base64.StdEncoding, in))
+	buf := bytes.Buffer{}
+	if _, err := io.Copy(&buf, r); err != nil {
+		return nil, err
+	}
+	if err := r.Close(); err != nil {
 		return nil, err
 	}
 
-	buf := bytes.Buffer{}
-	io.Copy(&buf, r)
+	if buf.Len() <= 0 {
+		return nil, errors.New("empty request")
+	}
 
 	return ParseAuthnRequest(buf.Bytes())
 }
