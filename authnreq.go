@@ -3,6 +3,7 @@ package saml
 import (
 	"bytes"
 	"compress/zlib"
+	"encoding/base64"
 	"errors"
 	"io"
 	"strings"
@@ -33,7 +34,11 @@ func (ar AuthnRequest) Encode() ([]byte, error) {
 	defer w.Close()
 	io.WriteString(w, xmlstr)
 
-	return buf.Bytes(), nil
+	raw := buf.Bytes()
+	ret := make([]byte, base64.URLEncoding.EncodedLen(len(raw)))
+	base64.URLEncoding.Encode(ret, raw)
+
+	return ret, nil
 }
 
 // DecodeAuthnRequestString takes in a byte buffer, decodes it from base64,
@@ -49,12 +54,12 @@ func DecodeAuthnRequest(b []byte) (*AuthnRequest, error) {
 }
 
 func decodeAuthnRequest(in io.Reader) (*AuthnRequest, error) {
-	buf := bytes.Buffer{}
-	r, err := zlib.NewReader(in)
+	r, err := zlib.NewReader(base64.NewDecoder(base64.URLEncoding, in))
 	if err != nil {
 		return nil, err
 	}
 
+	buf := bytes.Buffer{}
 	io.Copy(&buf, r)
 
 	return ParseAuthnRequest(buf.Bytes())
