@@ -263,4 +263,22 @@ uruUEt5gXJrdbUpiUAGnHg==</SignatureValue>
 	}
 
 	t.Logf("%s", xmlstr)
+
+	encoded, err := req.Encode()
+	if !assert.NoError(t, err, "Encode succeeds") {
+		return
+	}
+
+	t.Logf("%s", encoded)
+
+	decoded, err := DecodeAuthnRequest(encoded)
+	if !assert.NoError(t, err, "Decode succeeds") {
+		return
+	}
+
+	xmlstr2, err := decoded.Serialize()
+	if !assert.NoError(t, err, "Serialize succeeds") {
+		return
+	}
+	t.Logf("%s", xmlstr2)
 }

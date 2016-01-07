@@ -33,6 +33,7 @@ func (ar AuthnRequest) Encode() ([]byte, error) {
 	w := zlib.NewWriter(&buf)
 	defer w.Close()
 	io.WriteString(w, xmlstr)
+	w.Flush()
 
 	raw := buf.Bytes()
 	ret := make([]byte, base64.URLEncoding.EncodedLen(len(raw)))
