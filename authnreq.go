@@ -7,17 +7,41 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-libxml2/xpath"
+	"github.com/lestrrat/go-pdebug"
 	"github.com/lestrrat/go-saml/ns"
 )
+
+var b64enc = base64.StdEncoding
 
 func NewAuthnRequest() *AuthnRequest {
 	areq := &AuthnRequest{}
 	areq.Request.Message.Initialize()
 	return areq
+}
+
+var flateWriterPool = sync.Pool{
+	New: allocFlateWriter,
+}
+// wasteful, but oh well
+var emptyBuffer = &bytes.Buffer{}
+func allocFlateWriter() interface {} {
+	// flate.NewWriter (as of this writing) only returns an error
+	// if the second argument is invalid. As we are using a standard
+	// compression level here, there is no way this can err
+	w, _ := flate.NewWriter(emptyBuffer, flate.DefaultCompression)
+	return w
+}
+func getFlateWriter() *flate.Writer {
+	return flateWriterPool.Get().(*flate.Writer)
+}
+func releaseFlateWriter(r *flate.Writer) {
+	r.Reset(emptyBuffer) // release the previous io.Writer
+	flateWriterPool.Put(r)
 }
 
 // Encode takes the Authentication Request, generates the XML string,
@@ -30,17 +54,15 @@ func (ar AuthnRequest) Encode() ([]byte, error) {
 	}
 
 	buf := bytes.Buffer{}
-	w, err := flate.NewWriter(&buf, 1)
-	if err != nil {
-		return nil, err
-	}
-	defer w.Close()
-	io.WriteString(w, xmlstr)
-	w.Flush()
 
-	raw := buf.Bytes()
-	ret := make([]byte, base64.StdEncoding.EncodedLen(len(raw)))
-	base64.StdEncoding.Encode(ret, raw)
+	w := getFlateWriter()
+	defer releaseFlateWriter(w)
+	w.Reset(&buf)
+	io.WriteString(w, xmlstr)
+	w.Close()
+
+	ret := make([]byte, b64enc.EncodedLen(buf.Len()))
+	b64enc.Encode(ret, buf.Bytes())
 
 	return ret, nil
 }
@@ -48,26 +70,44 @@ func (ar AuthnRequest) Encode() ([]byte, error) {
 // DecodeAuthnRequestString takes in a byte buffer, decodes it from base64,
 // inflates it, and then parses the resulting XML
 func DecodeAuthnRequestString(s string) (*AuthnRequest, error) {
+	if pdebug.Enabled {
+		g := pdebug.IPrintf("START saml.DecodeAuthnRequestString '%30s...' (%d bytes)", s, len(s))
+		defer g.IRelease("END saml.DecodeAuthnRequestString")
+	}
 	return decodeAuthnRequest(strings.NewReader(s))
 }
 
 // DecodeAuthnRequest takes in a byte buffer, decodes it from base64,
 // inflates it, and then parses the resulting XML
 func DecodeAuthnRequest(b []byte) (*AuthnRequest, error) {
+	if pdebug.Enabled {
+		g := pdebug.IPrintf("START saml.DecodeAuthnRequest '%30s...' (%d bytes)", b, len(b))
+		defer g.IRelease("END saml.DecodeAuthnRequest")
+	}
 	return decodeAuthnRequest(bytes.NewReader(b))
 }
 
 func decodeAuthnRequest(in io.Reader) (*AuthnRequest, error) {
-	r := flate.NewReader(base64.NewDecoder(base64.StdEncoding, in))
+	r := flate.NewReader(base64.NewDecoder(b64enc, in))
+
 	buf := bytes.Buffer{}
 	if _, err := io.Copy(&buf, r); err != nil {
+		if pdebug.Enabled {
+			pdebug.Printf("Failed to copy from flate.Reader to bytes.Buffer: %s", err)
+		}
 		return nil, err
 	}
 	if err := r.Close(); err != nil {
+		if pdebug.Enabled {
+			pdebug.Printf("Failed to Close() flat.Reader: %s", err)
+		}
 		return nil, err
 	}
 
 	if buf.Len() <= 0 {
+		if pdebug.Enabled {
+			pdebug.Printf("buf.Len() is 0")
+		}
 		return nil, errors.New("empty request")
 	}
 
