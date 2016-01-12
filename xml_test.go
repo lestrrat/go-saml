@@ -264,7 +264,7 @@ uruUEt5gXJrdbUpiUAGnHg==</SignatureValue>
 
 	t.Logf("%s", xmlstr)
 
-	encoded, err := req.Encode()
+	encoded, err := req.Encode(nil)
 	if !assert.NoError(t, err, "Encode succeeds") {
 		return
 	}
