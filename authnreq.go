@@ -13,6 +13,7 @@ import (
 	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-libxml2/xpath"
 	"github.com/lestrrat/go-pdebug"
+	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/ns"
 )
 
@@ -27,9 +28,11 @@ func NewAuthnRequest() *AuthnRequest {
 var flateWriterPool = sync.Pool{
 	New: allocFlateWriter,
 }
+
 // wasteful, but oh well
 var emptyBuffer = &bytes.Buffer{}
-func allocFlateWriter() interface {} {
+
+func allocFlateWriter() interface{} {
 	// flate.NewWriter (as of this writing) only returns an error
 	// if the second argument is invalid. As we are using a standard
 	// compression level here, there is no way this can err
@@ -166,7 +169,14 @@ func (ar *AuthnRequest) PopulateFromXML(n types.Node) error {
 	}
 
 	ar.ProviderName = xpath.String(xpc.Find("@ProviderName"))
-	ar.ProtocolBinding = xpath.String(xpc.Find("@ProtocolBinding"))
+	// Check if we have a proper ProtocolBinding
+	switch proto := binding.Protocol(xpath.String(xpc.Find("@ProtocolBinding"))); proto {
+	case binding.HTTPPost, binding.HTTPRedirect:
+		ar.ProtocolBinding = proto
+	default:
+		return errors.New("invalid protocol binding")
+	}
+
 	ar.AssertionConsumerServiceURL = xpath.String(xpc.Find("@AssertionConsumerServiceURL"))
 	if node := xpath.NodeList(xpc.Find("NameIDPolicy")).First(); node != nil {
 		nip := &NameIDPolicy{}
@@ -194,7 +204,7 @@ func (ar AuthnRequest) MakeXMLNode(d types.Document) (types.Node, error) {
 	arxml.SetNamespace(ns.SAMLP.URI, ns.SAMLP.Prefix, true)
 
 	arxml.SetAttribute("ProviderName", ar.ProviderName)
-	arxml.SetAttribute("ProtocolBinding", ar.ProtocolBinding)
+	arxml.SetAttribute("ProtocolBinding", ar.ProtocolBinding.String())
 	arxml.SetAttribute("AssertionConsumerServiceURL", ar.AssertionConsumerServiceURL)
 
 	if nip := ar.NameIDPolicy; nip != nil {

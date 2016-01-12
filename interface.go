@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/lestrrat/go-libxml2/types"
+	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/nameid"
 )
 
@@ -222,7 +223,7 @@ type AuthnRequest struct {
 	NameIDPolicy                   *NameIDPolicy
 	ForceAuthn                     bool
 	IsPassive                      bool
-	ProtocolBinding                string
+	ProtocolBinding                binding.Protocol
 	AssertionConsumerServiceURL    string
 	AssertionConsumerServiceIndex  uint8
 	AttributeConsumingServiceIndex uint8
