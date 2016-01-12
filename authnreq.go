@@ -15,6 +15,7 @@ import (
 	"github.com/lestrrat/go-pdebug"
 	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/ns"
+	"github.com/lestrrat/go-xmlsec/crypto"
 	"github.com/lestrrat/go-xmlsec/dsig"
 )
 
@@ -51,22 +52,73 @@ func releaseFlateWriter(r *flate.Writer) {
 // Encode takes the Authentication Request, generates the XML string,
 // deflates it, and base64 encodes it. URL encoding is done in the HTTP
 // protocol.
-func (ar AuthnRequest) Encode() ([]byte, error) {
+func (ar AuthnRequest) Encode(key *crypto.Key) ([]byte, error) {
+	if pdebug.Enabled {
+		g := pdebug.IPrintf("START AuthnRequest.Encode")
+		defer g.IRelease("END AuthnRequest.Encode")
+	}
+
 	xmlstr, err := ar.Serialize()
 	if err != nil {
 		return nil, err
+	}
+	if pdebug.Enabled {
+		pdebug.Printf("Generated %d bytes of XML", len(xmlstr))
+	}
+
+	if key != nil {
+		p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
+		doc, err := p.ParseString(xmlstr)
+		if err != nil {
+			return nil, err
+		}
+
+		root, err := doc.DocumentElement()
+		if err != nil {
+			return nil, err
+		}
+
+		// Create a new signature section.
+		sig, err := dsig.NewSignature(root, dsig.ExclC14N, dsig.RsaSha1, "")
+		sig.AddReference(dsig.Sha1, "", "", "")
+		sig.AddTransform(dsig.Enveloped)
+		sig.AddKeyValue()
+
+		if pdebug.Enabled {
+			pdebug.Printf("Signing using key %p", key)
+		}
+		if err := sig.Sign(key); err != nil {
+			return nil, err
+		}
+
+		xmlstr = doc.Dump(false)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	buf := bytes.Buffer{}
 
 	w := getFlateWriter()
 	defer releaseFlateWriter(w)
+
 	w.Reset(&buf)
-	io.WriteString(w, xmlstr)
-	w.Close()
+	if _, err := io.WriteString(w, xmlstr); err != nil {
+		return nil, err
+	}
+
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+	if pdebug.Enabled {
+		pdebug.Printf("Compressed to %d bytes", buf.Len())
+	}
 
 	ret := make([]byte, b64enc.EncodedLen(buf.Len()))
 	b64enc.Encode(ret, buf.Bytes())
+	if pdebug.Enabled {
+		pdebug.Printf("Encoded into %d bytes of base64", len(ret))
+	}
 
 	return ret, nil
 }
@@ -75,7 +127,7 @@ func (ar AuthnRequest) Encode() ([]byte, error) {
 // inflates it, and then parses the resulting XML
 func DecodeAuthnRequestString(s string, verify bool) (*AuthnRequest, error) {
 	if pdebug.Enabled {
-		g := pdebug.IPrintf("START saml.DecodeAuthnRequestString '%30s...' (%d bytes)", s, len(s))
+		g := pdebug.IPrintf("START saml.DecodeAuthnRequestString '%.30s...' (%d bytes)", s, len(s))
 		defer g.IRelease("END saml.DecodeAuthnRequestString")
 	}
 	return decodeAuthnRequest(strings.NewReader(s), verify)
@@ -85,7 +137,7 @@ func DecodeAuthnRequestString(s string, verify bool) (*AuthnRequest, error) {
 // inflates it, and then parses the resulting XML
 func DecodeAuthnRequest(b []byte, verify bool) (*AuthnRequest, error) {
 	if pdebug.Enabled {
-		g := pdebug.IPrintf("START saml.DecodeAuthnRequest '%30s...' (%d bytes)", b, len(b))
+		g := pdebug.IPrintf("START saml.DecodeAuthnRequest '%.30s...' (%d bytes)", b, len(b))
 		defer g.IRelease("END saml.DecodeAuthnRequest")
 	}
 	return decodeAuthnRequest(bytes.NewReader(b), verify)
@@ -101,6 +153,7 @@ func decodeAuthnRequest(in io.Reader, verify bool) (*AuthnRequest, error) {
 		}
 		return nil, err
 	}
+
 	if err := r.Close(); err != nil {
 		if pdebug.Enabled {
 			pdebug.Printf("Failed to Close() flat.Reader: %s", err)
@@ -125,6 +178,10 @@ func decodeAuthnRequest(in io.Reader, verify bool) (*AuthnRequest, error) {
 		if err := verifier.Verify(xmlbytes); err != nil {
 			return nil, err
 		}
+	}
+
+	if pdebug.Enabled {
+		pdebug.Printf("base64 decode/uncompress/xml signature verification complete")
 	}
 
 	return ParseAuthnRequest(xmlbytes)
