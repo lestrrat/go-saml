@@ -271,7 +271,7 @@ uruUEt5gXJrdbUpiUAGnHg==</SignatureValue>
 
 	t.Logf("%s", encoded)
 
-	decoded, err := DecodeAuthnRequest(encoded)
+	decoded, err := DecodeAuthnRequest(encoded, false)
 	if !assert.NoError(t, err, "Decode succeeds") {
 		return
 	}

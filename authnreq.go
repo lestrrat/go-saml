@@ -15,6 +15,7 @@ import (
 	"github.com/lestrrat/go-pdebug"
 	"github.com/lestrrat/go-saml/binding"
 	"github.com/lestrrat/go-saml/ns"
+	"github.com/lestrrat/go-xmlsec/dsig"
 )
 
 var b64enc = base64.StdEncoding
@@ -72,25 +73,25 @@ func (ar AuthnRequest) Encode() ([]byte, error) {
 
 // DecodeAuthnRequestString takes in a byte buffer, decodes it from base64,
 // inflates it, and then parses the resulting XML
-func DecodeAuthnRequestString(s string) (*AuthnRequest, error) {
+func DecodeAuthnRequestString(s string, verify bool) (*AuthnRequest, error) {
 	if pdebug.Enabled {
 		g := pdebug.IPrintf("START saml.DecodeAuthnRequestString '%30s...' (%d bytes)", s, len(s))
 		defer g.IRelease("END saml.DecodeAuthnRequestString")
 	}
-	return decodeAuthnRequest(strings.NewReader(s))
+	return decodeAuthnRequest(strings.NewReader(s), verify)
 }
 
 // DecodeAuthnRequest takes in a byte buffer, decodes it from base64,
 // inflates it, and then parses the resulting XML
-func DecodeAuthnRequest(b []byte) (*AuthnRequest, error) {
+func DecodeAuthnRequest(b []byte, verify bool) (*AuthnRequest, error) {
 	if pdebug.Enabled {
 		g := pdebug.IPrintf("START saml.DecodeAuthnRequest '%30s...' (%d bytes)", b, len(b))
 		defer g.IRelease("END saml.DecodeAuthnRequest")
 	}
-	return decodeAuthnRequest(bytes.NewReader(b))
+	return decodeAuthnRequest(bytes.NewReader(b), verify)
 }
 
-func decodeAuthnRequest(in io.Reader) (*AuthnRequest, error) {
+func decodeAuthnRequest(in io.Reader, verify bool) (*AuthnRequest, error) {
 	r := flate.NewReader(base64.NewDecoder(b64enc, in))
 
 	buf := bytes.Buffer{}
@@ -114,7 +115,19 @@ func decodeAuthnRequest(in io.Reader) (*AuthnRequest, error) {
 		return nil, errors.New("empty request")
 	}
 
-	return ParseAuthnRequest(buf.Bytes())
+	xmlbytes := buf.Bytes()
+	if verify {
+		verifier, err := dsig.NewSignatureVerify()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := verifier.Verify(xmlbytes); err != nil {
+			return nil, err
+		}
+	}
+
+	return ParseAuthnRequest(xmlbytes)
 }
 
 func (ar AuthnRequest) Serialize() (string, error) {
