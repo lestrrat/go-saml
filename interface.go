@@ -267,7 +267,7 @@ type Assertion struct {
 type EntityID string
 type Endpoint struct {
 	Name             string
-	ProtocolBinding  string
+	ProtocolBinding  binding.Protocol
 	Location         string
 	ResponseLocation string
 }

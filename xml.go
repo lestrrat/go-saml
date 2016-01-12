@@ -382,7 +382,7 @@ func (e Endpoint) MakeXMLNode(doc types.Document) (types.Node, error) {
 		return nil, err
 	}
 
-	if v := e.ProtocolBinding; v != "" {
+	if v := e.ProtocolBinding.String(); v != "" {
 		root.SetAttribute("Binding", v)
 	}
 	if v := e.Location; v != "" {
