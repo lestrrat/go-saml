@@ -52,6 +52,8 @@ func releaseFlateWriter(r *flate.Writer) {
 // Encode takes the Authentication Request, generates the XML string,
 // deflates it, and base64 encodes it. URL encoding is done in the HTTP
 // protocol.
+// If the key value is not nil, it will attempt to generate a signature
+// using that specified key
 func (ar AuthnRequest) Encode(key *crypto.Key) ([]byte, error) {
 	if pdebug.Enabled {
 		g := pdebug.IPrintf("START AuthnRequest.Encode")
@@ -124,7 +126,9 @@ func (ar AuthnRequest) Encode(key *crypto.Key) ([]byte, error) {
 }
 
 // DecodeAuthnRequestString takes in a byte buffer, decodes it from base64,
-// inflates it, and then parses the resulting XML
+// inflates it, and then parses the resulting XML.
+// If verify is true, it looks for the signature in the payload and
+// does signature validation using go-xmlsec.
 func DecodeAuthnRequestString(s string, verify bool) (*AuthnRequest, error) {
 	if pdebug.Enabled {
 		g := pdebug.IPrintf("START saml.DecodeAuthnRequestString '%.30s...' (%d bytes)", s, len(s))
@@ -134,7 +138,9 @@ func DecodeAuthnRequestString(s string, verify bool) (*AuthnRequest, error) {
 }
 
 // DecodeAuthnRequest takes in a byte buffer, decodes it from base64,
-// inflates it, and then parses the resulting XML
+// inflates it, and then parses the resulting XML.
+// If verify is true, it looks for the signature in the payload and
+// does signature validation using go-xmlsec.
 func DecodeAuthnRequest(b []byte, verify bool) (*AuthnRequest, error) {
 	if pdebug.Enabled {
 		g := pdebug.IPrintf("START saml.DecodeAuthnRequest '%.30s...' (%d bytes)", b, len(b))
