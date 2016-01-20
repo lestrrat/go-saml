@@ -239,8 +239,9 @@ type Conditions struct {
 }
 
 type NameID struct {
-	Format nameid.Format
-	Value  string
+	Format          nameid.Format
+	SPNameQualifier string
+	Value           string
 }
 
 type SubjectConfirmation struct {
