@@ -156,9 +156,21 @@ func TestResponse(t *testing.T) {
 	res := NewResponse()
 	res.Issuer = "http://idp.example.com/metadata"
 	res.Destination = "http://sp.example.com/sso"
+
+	// Run serialize once so we can check for empty assertion
+	xmlstr, err := res.Serialize()
+	if !assert.NoError(t, err, "Serialize() succeeds") {
+		return
+	}
+	if !assert.NotContains(t, xmlstr, "<Assertion", "Should not contain assertion") {
+		return
+	}
+
+	res.Assertion = NewAssertion()
+
 	res.Assertion.Conditions.AddAudience("sp.example.com/sso")
 
-	xmlstr, err := res.Serialize()
+	xmlstr, err = res.Serialize()
 	if !assert.NoError(t, err, "Serialize() succeeds") {
 		return
 	}

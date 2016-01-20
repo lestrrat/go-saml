@@ -210,7 +210,7 @@ type Response struct {
 	Message
 	Status       StatusCode
 	InResponseTo string
-	Assertion    Assertion
+	Assertion    *Assertion
 }
 
 // Request represents the RequestAbstracttype from SAML specification

@@ -1,8 +1,6 @@
 package saml
 
 import (
-	"time"
-
 	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-saml/ns"
 )
@@ -10,8 +8,6 @@ import (
 func NewResponse() *Response {
 	res := &Response{}
 	res.Message.Initialize()
-
-	res.Assertion.Conditions.SetNotBefore(time.Now())
 	return res
 }
 
@@ -48,12 +44,14 @@ func (res Response) MakeXMLNode(d types.Document) (types.Node, error) {
 	st.AddChild(stc)
 	resxml.AddChild(st)
 
-	axml, err := res.Assertion.MakeXMLNode(d)
-	if err != nil {
-		return nil, err
-	}
+	if assertion := res.Assertion; assertion != nil {
+		axml, err := assertion.MakeXMLNode(d)
+		if err != nil {
+			return nil, err
+		}
 
-	resxml.AddChild(axml)
+		resxml.AddChild(axml)
+	}
 
 	resxml.MakePersistent()
 

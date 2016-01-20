@@ -1,6 +1,17 @@
 package saml
 
-import "github.com/lestrrat/go-saml/nameid"
+import (
+	"time"
+
+	"github.com/lestrrat/go-saml/nameid"
+)
+
+func NewAssertion() *Assertion {
+	a := &Assertion{}
+	a.Conditions.SetNotBefore(time.Now())
+
+	return a
+}
 
 func (am AuthenticationMethod) String() string {
 	return string(am)
@@ -28,4 +39,3 @@ func NewRequestedAuthnContext(cmp, classRef string) *RequestedAuthnContext {
 		AuthnContextClassRef: classRef,
 	}
 }
-
