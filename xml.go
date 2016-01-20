@@ -189,7 +189,7 @@ func (ac AuthnContext) MakeXMLNode(d types.Document) (types.Node, error) {
 	acxml.MakeMortal()
 	defer acxml.AutoFree()
 
-	accxml, err := d.CreateElement(ns.SAML.AddPrefix("AuthnClassRef"))
+	accxml, err := d.CreateElement(ns.SAML.AddPrefix("AuthnContextClassRef"))
 	if err != nil {
 		return nil, err
 	}
