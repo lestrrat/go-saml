@@ -46,11 +46,7 @@ func TestAssertion_XML(t *testing.T) {
 			},
 		},
 	}
-	a.Conditions.AddAudienceRestriction(
-		AudienceRestriction{
-			Audience: []string{"https://sp.example.com/SAML2"},
-		},
-	)
+	a.Conditions.AddAudience("https://sp.example.com/SAML2")
 	a.AddAttribute(Attribute{
 		Attrs: map[string]string{
 			"xmlns:" + ns.X500.Prefix:     ns.X500.URI,
@@ -158,8 +154,9 @@ func TestResponse(t *testing.T) {
 	xmlsec.Init()
 	defer xmlsec.Shutdown()
 	res := NewResponse()
-	res.Issuer = "http://sp.example.com/metadata"
-	res.Destination = "http://idp.example.com/sso"
+	res.Issuer = "http://idp.example.com/metadata"
+	res.Destination = "http://sp.example.com/sso"
+	res.Assertion.Conditions.AddAudience("sp.example.com/sso")
 
 	xmlstr, err := res.Serialize()
 	if !assert.NoError(t, err, "Serialize() succeeds") {

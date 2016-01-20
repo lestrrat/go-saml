@@ -234,7 +234,7 @@ type AuthnRequest struct {
 type Conditions struct {
 	NotBefore           time.Time
 	NotOnOrAfter        time.Time
-	AudienceRestriction []AudienceRestriction
+	AudienceRestriction AudienceRestriction
 	Condition           []interface{}
 }
 

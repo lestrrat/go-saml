@@ -129,17 +129,15 @@ func (c Conditions) MakeXMLNode(d types.Document) (types.Node, error) {
 	cxml.MakeMortal()
 	defer cxml.AutoFree()
 
-	cxml.SetAttribute("NotBefore", c.NotBefore.Format(TimeFormat))
-	cxml.SetAttribute("NotOnOrAfter", c.NotOnOrAfter.Format(TimeFormat))
+	// XXX shobosso says to use RFC3339
+	cxml.SetAttribute("NotBefore", c.NotBefore.Format(time.RFC3339))
+	cxml.SetAttribute("NotOnOrAfter", c.NotOnOrAfter.Format(time.RFC3339))
 
-	for _, ar := range c.AudienceRestriction {
-		arxml, err := ar.MakeXMLNode(d)
-		if err != nil {
-			return nil, err
-		}
-		cxml.AddChild(arxml)
+	arxml, err := c.AudienceRestriction.MakeXMLNode(d)
+	if err != nil {
+		return nil, err
 	}
-
+	cxml.AddChild(arxml)
 	cxml.MakePersistent()
 	return cxml, err
 }

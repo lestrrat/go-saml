@@ -1,6 +1,8 @@
 package saml
 
 import (
+	"time"
+
 	"github.com/lestrrat/go-libxml2/types"
 	"github.com/lestrrat/go-saml/ns"
 )
@@ -8,6 +10,8 @@ import (
 func NewResponse() *Response {
 	res := &Response{}
 	res.Message.Initialize()
+
+	res.Assertion.Conditions.SetNotBefore(time.Now())
 	return res
 }
 
