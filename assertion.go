@@ -8,6 +8,7 @@ import (
 
 func NewAssertion() *Assertion {
 	a := &Assertion{}
+	a.Version = "2.0"
 	a.Conditions.SetNotBefore(time.Now())
 
 	return a
