@@ -175,6 +175,10 @@ func TestResponse(t *testing.T) {
 		return
 	}
 
+	if !assert.Contains(t, xmlstr, "<saml:Audience>sp.example.com/sso", "<saml:Audience> exists") {
+		return
+	}
+
 	p := parser.New(parser.XMLParseDTDLoad | parser.XMLParseDTDAttr | parser.XMLParseNoEnt)
 	doc, err := p.ParseString(xmlstr)
 	if !assert.NoError(t, err, "Parse XML doc succeeds") {
