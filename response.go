@@ -2,7 +2,9 @@ package saml
 
 import (
 	"github.com/lestrrat/go-libxml2/types"
+	"github.com/lestrrat/go-pdebug"
 	"github.com/lestrrat/go-saml/ns"
+	"github.com/lestrrat/go-xmlsec/crypto"
 )
 
 func NewResponse() *Response {
@@ -56,4 +58,13 @@ func (res Response) MakeXMLNode(d types.Document) (types.Node, error) {
 	resxml.MakePersistent()
 
 	return resxml, nil
+}
+
+func (res Response) Encode(key *crypto.Key) ([]byte, error) {
+	if pdebug.Enabled {
+		g := pdebug.IPrintf("START Response.Encode")
+		defer g.IRelease("END Response.Encode")
+	}
+
+	return encode(res, key, false)
 }
