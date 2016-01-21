@@ -7,10 +7,10 @@ import (
 	"io"
 	"sync"
 
+	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-pdebug"
 	"github.com/lestrrat/go-xmlsec/crypto"
 	"github.com/lestrrat/go-xmlsec/dsig"
-	"github.com/lestrrat/test1/parser"
 )
 
 var b64enc = base64.StdEncoding
