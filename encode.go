@@ -41,7 +41,7 @@ type serializer interface {
 	Serialize() (string, error)
 }
 
-func encode(s serializer, key *crypto.Key, encodeBase64 bool) ([]byte, error) {
+func encode(s serializer, key *crypto.Key, compress bool) ([]byte, error) {
 	xmlstr, err := s.Serialize()
 	if err != nil {
 		return nil, err
@@ -81,6 +81,10 @@ func encode(s serializer, key *crypto.Key, encodeBase64 bool) ([]byte, error) {
 		}
 	}
 
+	if !compress {
+		return []byte(xmlstr), nil
+	}
+
 	buf := bytes.Buffer{}
 
 	w := getFlateWriter()
@@ -96,10 +100,6 @@ func encode(s serializer, key *crypto.Key, encodeBase64 bool) ([]byte, error) {
 	}
 	if pdebug.Enabled {
 		pdebug.Printf("Compressed to %d bytes", buf.Len())
-	}
-
-	if !encodeBase64 {
-		return buf.Bytes(), nil
 	}
 
 	ret := make([]byte, b64enc.EncodedLen(buf.Len()))
