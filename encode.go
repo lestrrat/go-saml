@@ -64,9 +64,24 @@ func encode(s serializer, key *crypto.Key, compress bool) ([]byte, error) {
 
 		// Create a new signature section.
 		sig, err := dsig.NewSignature(root, dsig.ExclC14N, dsig.RsaSha1, "")
-		sig.AddReference(dsig.Sha1, "", "", "")
-		sig.AddTransform(dsig.Enveloped)
-		sig.AddKeyValue()
+		if err := sig.AddReference(dsig.Sha1, "", "", ""); err != nil {
+			return nil, err
+		}
+
+		if err := sig.AddTransform(dsig.Enveloped); err != nil {
+			return nil, err
+		}
+
+		if err := sig.AddKeyValue(); err != nil {
+			return nil, err
+		}
+
+		// If the key is setup using X509, add that node
+		if key.HasX509() == nil {
+			if err := sig.AddX509Data(); err != nil {
+				return nil, err
+			}
+		}
 
 		if pdebug.Enabled {
 			pdebug.Printf("Signing using key %p", key)
