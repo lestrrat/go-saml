@@ -72,8 +72,10 @@ func encode(s serializer, key *crypto.Key, compress bool) ([]byte, error) {
 			return nil, err
 		}
 
-		if err := sig.AddKeyValue(); err != nil {
-			return nil, err
+		if key.HasRsaKey() == nil || key.HasDsaKey() == nil || key.HasEcdsaKey() == nil {
+			if err := sig.AddKeyValue(); err != nil {
+				return nil, err
+			}
 		}
 
 		// If the key is setup using X509, add that node
