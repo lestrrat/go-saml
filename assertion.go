@@ -4,12 +4,14 @@ import (
 	"time"
 
 	"github.com/lestrrat/go-saml/nameid"
+	"github.com/satori/go.uuid"
 )
 
 func NewAssertion() *Assertion {
 	a := &Assertion{}
 	a.Version = "2.0"
 	a.Conditions.SetNotBefore(time.Now())
+	a.ID = uuid.NewV5(uuid.NamespaceDNS, UUIDURL).String()
 
 	return a
 }
